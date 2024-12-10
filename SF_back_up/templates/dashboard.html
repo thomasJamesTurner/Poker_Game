@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-box">
+            <h1>Welcome, Teacher</h1>
+            <div class="search-container">
+                <input type="text" id="search" placeholder="Search students..." onkeyup="filterStudents()">
+            </div>
+            <form method="POST" action="/dashboard">
+                <label for="student">Select a Student:</label>
+                <select name="student" id="student">
+                    <option value="">Select a student</option>
+                    {% for student in students %}
+                        <option value="{{ student[2] }}">{{ student[2] }}</option>  
+                    {% endfor %}
+                </select>
+                <button type="submit">Submit</button>
+            </form>
+            {% if selected_student %}
+              <h2>Selected Student ID: {{ selected_student }}</h2>
+            {% endif %}
+            <form action="/logout" method="GET">
+                <button type="submit" class="logout-button">Logout</button>
+            </form>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

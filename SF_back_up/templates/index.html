@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facial Recognition Login</title>
+  <link rel="stylesheet" href="static/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="login-container" id = "box">
+    <div class="login-box">
+      <h1>Facial Recognition Login</h1>
+      <p class="description">Please position your face in front of the camera to log in.</p>
+      <div id="camera"></div>
+      <button id="capture-btn" onclick="take_photo()">Take Snapshot</button>
+      <div class = "after-cap" id = "ac" >
+        <button onclick="window.location.reload()">Retake</button>
+        
+        <button onclick="s()" type="submit">Submit</button>
+       
+      </div>
+      <canvas id="canvas" hidden></canvas>
+       <div class = "login"> 
+        <a href="/login">I'm a teacher</a>
+      </div>
+    </div>
+  </div>
+  <div id = "loader_container" style = "display:none;">
+    <div class= "loader"></div>
+    <p class = "loader_text">Connecting to server(s)...</p>
+  </div>
+<script src="static/webcam.js"></script>
+<script src="static/script.js"></script>
+</body>
+</html>
