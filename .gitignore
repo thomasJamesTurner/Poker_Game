@@ -1,0 +1,8 @@
+*.txt
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+Bin/*
+Build/*
+.vs/*
