@@ -1,116 +1,73 @@
+#pragma once
 #include<iostream>
 #include<vector>
 #include<algorithm>
 #include<random>
 
-enum class Suits
-{
-	hearts,
-	diamonds,
-	clubs,
-	spades
-};
-
-enum class Values
-{
-	ace = 0,
-	n2,
-	n3,
-	n4,
-	n5,
-	n6,
-	n7,
-	n8,
-	n9,
-	n10,
-	jack,
-	queen,
-	king
-};
+bool acesHigh = true;
+std::string suits[4] = { "spades","hearts","clubs","diamonds" };
+std::string ranks[13] = {"Ace","2","3","4","5","6","7","8","9","10","Jack","Queen","King"};
 
 struct Card
 {
-	Values value;
-	Suits suit;
+	std::string value;
+	std:: string suit;
+	Card(std::string v, std::string s) { value = v; suit = s; };
 };
 
+int getRankIndex(std::string rank)
+{
+	std::string* objectPtr =std::find(ranks, ranks + 13, rank);
+	int idx = objectPtr - ranks;
+	if (objectPtr == ranks + 13)
+	{
+		return -1;
+	}
+	return idx;
+}
+
+int getSuitIndex(std::string suit)
+{
+	std::string* objectPtr = std::find(suits, suits + 4, suit);
+	int idx = objectPtr - suits;
+	if (objectPtr == ranks + 4)
+	{
+		return -1;
+	}
+	return idx;
+}
+
+int getRankValue(std::string rank)
+{
+	if (acesHigh && rank == "Ace")
+	{
+		return 14;
+	}
+	else
+	{
+		return getRankIndex(rank) + 1;
+	}
+}
 
 std::string getCardName(Card card)
 {
-	std::string suitName;
-	std::string valueName;
-	switch (card.suit)
+	std::string output;
+	if (card.suit == "hearts" || card.suit == "diamonds")
 	{
-	case(Suits::hearts):
-		suitName = "hearts";
-		break;
-	case(Suits::clubs):
-		suitName = "clubs";
-		break;
-	case(Suits::diamonds):
-		suitName = "diamonds";
-		break;
-	case(Suits::spades):
-		suitName = "spades";
-		break;
-	default:
-		suitName = "unknown";
+		output = "\033[31;42m" + card.value + " of " + card.suit + "\033[0m";
 	}
-	switch (card.value) {
-		case Values::ace:
-			valueName = "ace";
-			break;
-		case Values::n2:
-			valueName = "2";
-			break;
-		case Values::n3:
-			valueName = "3";
-			break;
-		case Values::n4:
-			valueName = "4";
-			break;
-		case Values::n5:
-			valueName = "5";
-			break;
-		case Values::n6:
-			valueName = "6";
-			break;
-		case Values::n7:
-			valueName = "7";
-			break;
-		case Values::n8:
-			valueName = "8";
-			break;
-		case Values::n9:
-			valueName = "9";
-			break;
-		case Values::n10:
-			valueName = "10";
-			break;
-		case Values::jack:
-			valueName = "jack";
-			break;
-		case Values::queen:
-			valueName = "queen";
-			break;
-		case Values::king:
-			valueName = "king";
-			break;
-		default:
-			valueName = "Unknown";
-			break;
+	else
+	{
+		output = "\033[30;42m" + card.value + " of " + card.suit + "\033[0m";
 	}
-
-	return valueName + " " + suitName;
-
+	return output;
 }
 
 
 class Deck
 {
-	std::vector<Card> cards;
-
 public:
+	std::vector<Card> cards;
 	Card drawCard() 
 	{
 		Card topCard = cards.back();
@@ -122,11 +79,12 @@ public:
 	{
 		for (int i = 0; i < 4;i++)
 		{
-			for (int j = 0;j < 13; j++)
+			Card card = {"Ace",suits[i]};
+			cards.push_back(card);
+			for (int j = 0;j < 12; j++)
 			{
-				Card card;
-				card.suit = static_cast<Suits>(i);
-				card.value = static_cast<Values>(j);
+				card.suit = suits[i];
+				card.value = ranks[j];
 				cards.push_back(card);
 				
 			}
@@ -142,14 +100,23 @@ public:
 
 class Hand
 {
-	std::vector<Card> cards;
 public:
+	std::vector<Card> cards;
 
 	void showCards()
 	{
 		for (Card card : cards)
 		{
 			std::cout << getCardName(card) << std::endl;
+		}
+		std::cout << "\n";
+	}
+
+	void makeHand(Deck* deck,int numOfCards)
+	{
+		for (int i = 0; i < numOfCards;i++)
+		{
+			addCardToHand(deck->drawCard());
 		}
 	}
 
@@ -158,4 +125,8 @@ public:
 		cards.push_back(card);
 	}
 
+	std::vector<Card> getHandCards()
+	{
+		return cards;
+	}
 };;
