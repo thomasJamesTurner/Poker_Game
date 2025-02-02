@@ -26,15 +26,9 @@ int main()
 	setBackgroundColour(42);
 	
 	Table table;
-	table.setTable({
-		{"Ace"	,"spades" },
-		{"10"	,"spades" },
-		{"Jack"	,"spades" },
-		{"Queen","spades" },
-		{"King"	,"spades" }
-		}
-		);
-	//table.addCardsToTable(5);
-	table.roundLeaderboard();
-
+	table.addPlayer();
+	for (int i = 0;i < 4;i++)
+	{
+		table.playRound();
+	}
 }

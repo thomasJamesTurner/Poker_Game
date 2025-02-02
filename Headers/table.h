@@ -3,6 +3,7 @@
 #include "player.h"
 #include <map>
 #include <string>
+#include "events.h"
 
 
 struct handType
@@ -14,21 +15,57 @@ struct handType
 class Table
 {
 	Deck deck;
+	float pot = 0.0f;
 	std::vector<Card> flop;
-	std::vector<Player> players;
+	std::vector<Player*> players;
+	EventDispatcher dispatch;
 public:
+
+	void addToPot(const Event& event)
+	{
+		const PlayerBetEvent& betEvent = static_cast<const PlayerBetEvent&>(event);
+		pot += betEvent.betAmount;
+	}
 
 	Table()
 	{
 		deck.makeDeck();
 		deck.shuffleDeck();
+		dispatch.subscribe(EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1));	
+	}
 
-		
-		Player player1(&deck);
-		Player player2(&deck);
-		players.push_back(player1);
-		players.push_back(player2);
-		
+	
+
+	inline Deck* getDeck()
+	{
+		return &deck;
+	}
+
+	inline EventDispatcher* getEventDispatcher()
+	{
+		return &dispatch;
+	}
+
+	void addPlayer()
+	{
+		Player* player = new Player(&deck,&dispatch);
+		players.push_back(player);
+	}
+
+	void playRound()
+	{
+		pot = 0;
+		deck.makeDeck();
+		deck.shuffleDeck();
+		addCardsToTable(5);
+		for (Player* player : players)
+		{
+			Hand* hand = player->getHand();
+			hand->makeHand(&deck, 2);
+			hand->showCards();
+			player->blind();
+		}
+		roundLeaderboard();
 	}
 
 	void sortPlayers()
@@ -37,10 +74,10 @@ public:
 		(
 			players.begin(),
 			players.end(),
-			[&](Player a, Player b)
+			[&](Player *a, Player *b)
 			{
-				int p1score = checkHand(*a.getHand());
-				int p2score = checkHand(*b.getHand());
+				int p1score = checkHand(*a->getHand());
+				int p2score = checkHand(*b->getHand());
 
 				return p1score > p2score;
 			}
@@ -55,12 +92,14 @@ public:
 			std::cout << getCardName(card) << std::endl;
 		}
 		sortPlayers();
-		for (Player player : players)
+		for (Player* player : players)
 		{
-			tableMsg("Player Name: " + player.getPlayerName() + " score: " + std::to_string(checkHand(*player.getHand())));
+			tableMsg("Player Name: " + player->getPlayerName() + " score: " + std::to_string(checkHand(*player->getHand())));
 		}
 
-		tableMsg("### Winner ###\n" + players[0].getPlayerName());
+		tableMsg("### Winner ###\n" + players[0]->getPlayerName());
+		PlayerWinEvent win(pot,(players[0]->getPlayerName()));
+		dispatch.dispatch(win);
 	}
 
 	void tableMsg(std::string msg)
