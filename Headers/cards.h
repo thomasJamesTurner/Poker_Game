@@ -105,15 +105,16 @@ public:
 
 	void showCards()
 	{
+		std::cout << "\n";
 		for (Card card : cards)
 		{
 			std::cout << getCardName(card) << std::endl;
 		}
-		std::cout << "\n";
 	}
 
 	void makeHand(Deck* deck,int numOfCards)
 	{
+		cards.clear();
 		for (int i = 0; i < numOfCards;i++)
 		{
 			addCardToHand(deck->drawCard());

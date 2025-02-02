@@ -46,14 +46,25 @@ public:
 		return &dispatch;
 	}
 
-	void addPlayer()
+	void addPlayer(std::function<void(BotPlayer*)> playTurnStrategy = nullptr)
 	{
-		Player* player = new Player(&deck,&dispatch);
+		Player* player;
+		if (playTurnStrategy != nullptr)
+		{
+			
+			player = new BotPlayer(&deck, &dispatch,playTurnStrategy);
+		}
+		else 
+		{
+			player = new UserPlayer(&deck, &dispatch);
+			
+		}
 		players.push_back(player);
 	}
 
 	void playRound()
 	{
+		flop.clear();
 		pot = 0;
 		deck.makeDeck();
 		deck.shuffleDeck();
@@ -62,8 +73,7 @@ public:
 		{
 			Hand* hand = player->getHand();
 			hand->makeHand(&deck, 2);
-			hand->showCards();
-			player->blind();
+			player->playTurn();
 		}
 		roundLeaderboard();
 	}
@@ -309,7 +319,7 @@ public:
 		{
 			sortCardsByRank(cards);
 			
-			int index;
+			int index = 0;
 			if (!acesHigh)
 			{
 				

@@ -18,10 +18,8 @@ public:
 	{
 		this->dispatcher = dispatch;
 		dispatcher->subscribe(EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1));
-		setPlayerName();
-		std::cout << "\033[30;42m" << "Player Name: " << playerName << "\033[0m" << std::endl;
-		setAccountAmount();
-		showAccount();
+		playerName = "";
+		account = 0.0f;
 	}
 	virtual ~Player() {}
 
@@ -41,35 +39,37 @@ public:
 		
 	}
 
-	void blind()
+	virtual void blind()
 	{
-		std::cout << "\033[30;42m" << "Input bet amount: " << "\033[0m" << std::endl;
 		std::string amount;
-		float bet = 0;
-		try
+		float bet = 0.0f;
+		while (bet > account || bet ==0.0f)
 		{
-			std::getline(std::cin, amount);
-			bet = std::stof(amount);
-			
-		}
-		catch (...)
-		{
-			amount = "";
-		}
+			bet = 0.0f;
+			try
+			{
+				std::cout << "\033[30;42m" << getPlayerName() <<" bet amount: " << "\033[0m";
+				std::getline(std::cin, amount);
+				bet = std::stof(amount);
 
-		if (amount == "")
-		{
-			bet = account/10;
-			
-		}
+			}
+			catch (...)
+			{
+				amount = "";
+			}
 
-		if (bet > account)
-		{
-			std::cout << "\033[30;42m" << "Bet cannot be greater than the total of the account" << "\033[0m" << std::endl;
-			blind();
+			if (amount == "")
+			{
+				bet = account / 10;
+
+			}
+
+			if (bet > account)
+			{
+				std::cout << "\033[30;42m" << "Bet cannot be greater than the total of the account" << "\033[0m" << std::endl;
+			}
 		}
 		makeBet(bet);
-		
 	}
 
 	void makeBet(float betAmount)
@@ -81,24 +81,9 @@ public:
 		std::cout << "\033[30;42m" << "Bet $" << betAmount << "\033[0m" << std::endl;
 	}
 
-	void setAccountAmount()
+	void setAccountAmount(float amount)
 	{
-		std::cout << "\033[30;42m" << "Input Amount To Play With: " << "\033[0m";
-		std::string amount;
-		try
-		{
-			std::getline(std::cin, amount);
-			account = std::stof(amount);
-		}
-		catch(...)
-		{
-			amount = "";
-		}
-		if (amount == "")
-		{
-			account = 100.00f;
-		}
-
+		account = amount;
 	}
 
 	void setPlayerName()
@@ -109,6 +94,11 @@ public:
 		{
 			playerName = rand();
 		}
+	}
+
+	virtual void setPlayerName(std::string name)
+	{
+		playerName = name;
 	}
 
 	inline std::string getPlayerName()
@@ -125,4 +115,83 @@ public:
 	{
 		return &playerHand;
 	}
+
+	inline float getPlayerAccount()
+	{
+		return account;
+	}
+
+	virtual void playTurn()
+	{
+		playerHand.showCards();
+		blind();
+	}
+};
+
+class UserPlayer : public Player
+{
+public:
+	UserPlayer(Deck* deck, EventDispatcher* dispatch) : Player(deck, dispatch)
+	{
+		setPlayerName();
+		std::cout << "\033[30;42m" << "Player Name: " << this->getPlayerName() << "\033[0m" << std::endl;
+		setUserAccountAmount();
+		showAccount();
+	}
+
+	void setUserAccountAmount()
+	{
+		std::cout << "\033[30;42m" << "Input Amount To Play With: " << "\033[0m";
+		std::string amount;
+		float amountFloat;
+		try
+		{
+			std::getline(std::cin, amount);
+			amountFloat = std::stof(amount);
+		}
+		catch (...)
+		{
+			amount = "";
+		}
+		if (amount == "")
+		{
+			amountFloat = 100.00f;
+		}
+		this->setAccountAmount(amountFloat);
+
+	}
+};
+
+
+class BotPlayer : public Player
+{
+	std::function<void(BotPlayer*)> playTurnStrategy;
+public:
+
+
+	BotPlayer(Deck* deck, EventDispatcher* dispatch, std::function<void(BotPlayer*)> playTurnStrategy): Player(deck,dispatch)
+	{
+		if (playTurnStrategy) {
+			this->playTurnStrategy = playTurnStrategy;
+		}
+		else {
+			std::cerr << "Error: BotPlayer received a null playTurnStrategy!\n";
+		}
+		setPlayerName("Bot_" + std::to_string(rand() % 1000));
+		this->setAccountAmount(100.00f);
+		showAccount();
+	}
+
+
+	void playTurn() override
+	{
+		if (playTurnStrategy) 
+		{
+			playTurnStrategy(this);
+		}
+		else {
+			std::cerr << "Error: playTurnStrategy is uninitialized!\n";
+		}
+	}
+
 };

@@ -3,7 +3,7 @@
 #include "../headers/player.h"
 #include <windows.h>
 
-void setBackgroundColour(int colour)
+static void setBackgroundColour(int colour)
 {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -21,12 +21,20 @@ void setBackgroundColour(int colour)
 	SetConsoleCursorPosition(hConsole, topLeft);
 }
 
+
+static void randomStrategy(BotPlayer* bot)
+{
+	float betAmount = (rand() % static_cast<int>(bot->getPlayerAccount() * 0.5)) + 1; // Random bet up to 50% balance
+	bot->makeBet(betAmount);
+}
+
 int main()
 {
 	setBackgroundColour(42);
 	
 	Table table;
 	table.addPlayer();
+	table.addPlayer(randomStrategy);
 	for (int i = 0;i < 4;i++)
 	{
 		table.playRound();
