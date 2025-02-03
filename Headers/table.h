@@ -24,7 +24,9 @@ public:
 	void addToPot(const Event& event)
 	{
 		const PlayerBetEvent& betEvent = static_cast<const PlayerBetEvent&>(event);
+
 		pot += betEvent.betAmount;
+
 	}
 
 	void removePlayer(const Event& event)
@@ -84,10 +86,12 @@ public:
 
 	void playRound()
 	{
+		pot = 0;
+		flop.clear();
+
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1]);
 		dispatch.dispatch(startRound);
-		flop.clear();
-		pot = 0;
+		
 		deck.makeDeck();
 		deck.shuffleDeck();
 		addCardsToTable(5);

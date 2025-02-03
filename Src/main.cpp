@@ -25,7 +25,7 @@ static void setBackgroundColour(int colour)
 static void randomStrategy(BotPlayer* bot)
 {
 	float betAmount = (rand() % static_cast<int>(bot->getPlayerAccount() * 0.5)) + bot->getMinimumBet(); // Random bet up to 50% balance
-	bot->makeBet(betAmount);
+	bot->blind(betAmount);
 }
 
 int main()

@@ -18,6 +18,7 @@ public:
 	Player(Deck* deck,EventDispatcher* dispatch)
 	{
 		this->dispatcher = dispatch;
+		dispatcher->subscribe(EventType::RoundStart, std::bind(&Player::startRound, this, std::placeholders::_1));
 		dispatcher->subscribe(EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1));
 		dispatcher->subscribe(EventType::PlayerBet, std::bind(&Player::setMinimumBet, this, std::placeholders::_1));
 		playerName = "";
@@ -39,7 +40,7 @@ public:
 		}
 		if (account <= 0)
 		{
-			std::cout<< "Player "<< getPlayerName()<<" has no money left to play with and will exit" << std::endl;
+			std::cout<< "Player: "<< getPlayerName()<<" has no money left to play with and will exit" << std::endl;
 			PlayerExitEvent playerExit(this);
 			dispatcher->dispatch(playerExit);
 		}
@@ -214,7 +215,7 @@ class BotPlayer : public Player
 	std::function<void(BotPlayer*)> playTurnStrategy;
 public:
 
-
+	
 	BotPlayer(Deck* deck, EventDispatcher* dispatch, std::function<void(BotPlayer*)> playTurnStrategy): Player(deck,dispatch)
 	{
 		if (playTurnStrategy) {
@@ -223,8 +224,10 @@ public:
 		else {
 			std::cerr << "Error: BotPlayer received a null playTurnStrategy!\n";
 		}
-		int randName = rand() % 1000;
-		setPlayerName("Bot_" + std::to_string(randName));
+		std::random_device rd;
+		std::default_random_engine rng(rd());
+		std::uniform_int_distribution<int> dist(1, 1000);
+		setPlayerName("Bot_" + std::to_string(dist(rng)));
 		this->setAccountAmount(100.00f);
 		showAccount();
 	}
@@ -245,19 +248,22 @@ public:
 	{
 		float account = this->getPlayerAccount();
 
+		if (bet > account)
+		{
+			bet = account;
+		}
+
 		if (bet == account)
 		{
 			std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
 		}
 
-		if (bet > account)
-		{
-			std::cout << "\033[30;42m" << "Bet cannot be greater than the total of the account" << "\033[0m" << std::endl;
-		}
+		
 		if (bet < this->getMinimumBet() && bet != account)
 		{
 			std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
 		}
+		this->makeBet(bet);
 		
 	}
 
