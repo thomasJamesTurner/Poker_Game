@@ -11,6 +11,7 @@ class Player
 	std::string playerName;
 	Hand playerHand;
 	float account;
+	float minblind;
 	EventDispatcher* dispatcher;
 
 public:
@@ -20,6 +21,7 @@ public:
 		dispatcher->subscribe(EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1));
 		playerName = "";
 		account = 0.0f;
+		minblind = 0.0f;
 	}
 	virtual ~Player() {}
 
@@ -33,9 +35,30 @@ public:
 			std::cout << "\033[30;42m" << "win amount $" << winEvent.winnings << "\033[0m" << std::endl;
 			account += winEvent.winnings;
 			showAccount();
-
+		}
+		if (account <= 0)
+		{
+			std::cout<< "Player "<< getPlayerName()<<" has no money left to play with and will exit" << std::endl;
+			PlayerExitEvent playerExit(this);
+			dispatcher->dispatch(playerExit);
 		}
 
+		
+	}
+
+	void startRound(const Event& event)
+	{
+		const RoundStartEvent& startEvent = static_cast<const RoundStartEvent&>(event);
+
+		minblind = startEvent.bigBlindAmount;
+		if (startEvent.smallBlind == this)
+		{
+			makeBet(startEvent.smallBlindAmount);
+		}
+		if (startEvent.bigBlind == this)
+		{
+			makeBet(minblind);
+		}
 		
 	}
 
@@ -60,8 +83,13 @@ public:
 
 			if (amount == "")
 			{
-				bet = account / 10;
+				bet = account;
 
+			}
+
+			if (bet == account)
+			{
+				std::cout << "\033[30;42m" << getPlayerName()<< " has gone ALL IN" << "\033[0m" << std::endl;
 			}
 
 			if (bet > account)

@@ -4,7 +4,8 @@ enum class EventType {
     PlayerBet,
     PlayerWin,
     RoundStart,
-    RoundEnd
+    RoundEnd,
+    PlayerExit
 };
 
 class Event {

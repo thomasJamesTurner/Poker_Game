@@ -4,9 +4,10 @@
 #include <unordered_map>
 #include <functional>
 #include "events_base.h"
+#include "player.h"
 
 
-
+class Player;
 
 class PlayerBetEvent : public Event {
 public:
@@ -32,7 +33,28 @@ public:
     }
 };
 
+class PlayerExitEvent : public Event {
+public:
+    Player* player;
 
+    PlayerExitEvent(Player* playerExiting) : player(playerExiting) {}
 
+    EventType getType() const override {
+        return EventType::PlayerExit;
+    }
+};
+
+class RoundStartEvent : public Event {
+public:
+    float smallBlindAmount;
+    float bigBlindAmount;
+    Player* smallBlind;
+    Player* bigBlind;
+
+    RoundStartEvent(float smallBlindAmount, float bigBlindAmount, Player* smallBlind, Player* bigBlind) :smallBlindAmount(smallBlindAmount),bigBlindAmount(bigBlindAmount), smallBlind(smallBlind), bigBlind(bigBlind) {}
+    EventType getType() const override {
+        return EventType::RoundStart;
+    }
+};
 
 

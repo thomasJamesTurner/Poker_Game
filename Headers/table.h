@@ -27,11 +27,25 @@ public:
 		pot += betEvent.betAmount;
 	}
 
+	void removePlayer(const Event& event)
+	{
+		const PlayerExitEvent& exitEvent = static_cast<const PlayerExitEvent&>(event);
+
+		auto it = std::find(players.begin(), players.end(), exitEvent.player);
+		if (it != players.end()) 
+		{
+			players.erase(it);
+		}
+
+		std::cout << "Player: " << exitEvent.player->getPlayerName() << " no longer at the table" << std::endl;
+	}
+
 	Table()
 	{
 		deck.makeDeck();
 		deck.shuffleDeck();
 		dispatch.subscribe(EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1));	
+		dispatch.subscribe(EventType::PlayerExit, std::bind(&Table::removePlayer, this, std::placeholders::_1));
 	}
 
 	
@@ -64,6 +78,9 @@ public:
 
 	void playRound()
 	{
+
+		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1]);
+		dispatch.dispatch(startRound);
 		flop.clear();
 		pot = 0;
 		deck.makeDeck();
