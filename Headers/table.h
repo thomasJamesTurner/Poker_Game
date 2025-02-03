@@ -20,7 +20,7 @@ class Table
 	std::vector<Player*> players;
 	EventDispatcher dispatch;
 public:
-
+	bool gameover = false;
 	void addToPot(const Event& event)
 	{
 		const PlayerBetEvent& betEvent = static_cast<const PlayerBetEvent&>(event);
@@ -38,6 +38,12 @@ public:
 		}
 
 		std::cout << "Player: " << exitEvent.player->getPlayerName() << " no longer at the table" << std::endl;
+		size_t size = players.size();
+		if (size == 1)
+		{
+			gameover = true;
+		}
+
 	}
 
 	Table()
@@ -78,7 +84,6 @@ public:
 
 	void playRound()
 	{
-
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1]);
 		dispatch.dispatch(startRound);
 		flop.clear();

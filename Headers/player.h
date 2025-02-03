@@ -19,6 +19,7 @@ public:
 	{
 		this->dispatcher = dispatch;
 		dispatcher->subscribe(EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1));
+		dispatcher->subscribe(EventType::PlayerBet, std::bind(&Player::setMinimumBet, this, std::placeholders::_1));
 		playerName = "";
 		account = 0.0f;
 		minblind = 0.0f;
@@ -66,7 +67,7 @@ public:
 	{
 		std::string amount;
 		float bet = 0.0f;
-		while (bet > account || bet ==0.0f)
+		while (bet > account || bet ==0.0f || bet<minblind && bet != account)
 		{
 			bet = 0.0f;
 			try
@@ -96,9 +97,15 @@ public:
 			{
 				std::cout << "\033[30;42m" << "Bet cannot be greater than the total of the account" << "\033[0m" << std::endl;
 			}
+			if (bet < minblind)
+			{
+				std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
+			}
 		}
 		makeBet(bet);
 	}
+
+	
 
 	void makeBet(float betAmount)
 	{
@@ -107,6 +114,12 @@ public:
 		dispatcher->dispatch(bet);
 		showAccount();
 		std::cout << "\033[30;42m" << "Bet $" << betAmount << "\033[0m" << std::endl;
+	}
+
+	void setMinimumBet(const Event& event)
+	{
+		const PlayerBetEvent& betEvent = static_cast<const PlayerBetEvent&>(event);
+		minblind = betEvent.betAmount;
 	}
 
 	void setAccountAmount(float amount)
@@ -147,6 +160,11 @@ public:
 	inline float getPlayerAccount()
 	{
 		return account;
+	}
+
+	inline float getMinimumBet()
+	{
+		return minblind;
 	}
 
 	virtual void playTurn()
@@ -205,7 +223,8 @@ public:
 		else {
 			std::cerr << "Error: BotPlayer received a null playTurnStrategy!\n";
 		}
-		setPlayerName("Bot_" + std::to_string(rand() % 1000));
+		int randName = rand() % 1000;
+		setPlayerName("Bot_" + std::to_string(randName));
 		this->setAccountAmount(100.00f);
 		showAccount();
 	}
@@ -220,6 +239,26 @@ public:
 		else {
 			std::cerr << "Error: playTurnStrategy is uninitialized!\n";
 		}
+	}
+
+	void blind(float bet)
+	{
+		float account = this->getPlayerAccount();
+
+		if (bet == account)
+		{
+			std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
+		}
+
+		if (bet > account)
+		{
+			std::cout << "\033[30;42m" << "Bet cannot be greater than the total of the account" << "\033[0m" << std::endl;
+		}
+		if (bet < this->getMinimumBet() && bet != account)
+		{
+			std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
+		}
+		
 	}
 
 };

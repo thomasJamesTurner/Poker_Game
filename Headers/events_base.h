@@ -32,8 +32,3 @@ public:
         }
     }
 };
-
-class IEventListener {
-public:
-    virtual void onEvent(const Event& event) = 0;
-};
