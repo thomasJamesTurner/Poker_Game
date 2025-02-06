@@ -5,7 +5,9 @@ enum class EventType {
     PlayerWin,
     RoundStart,
     RoundEnd,
-    PlayerExit
+    PlayerExit,
+    PlayerFold,
+    PlayerAllIn
 };
 
 class Event {
@@ -21,6 +23,17 @@ private:
 public:
     void subscribe(EventType type, std::function<void(const Event&)> callback) {
         listeners[type].push_back(callback);
+    }
+
+    void unsubscribe(EventType type, const std::function<void(const Event&)>& callback) {
+        auto& listenerList = listeners[type];
+
+        listenerList.erase(
+            std::remove_if(listenerList.begin(), listenerList.end(),
+                [&](const std::function<void(const Event&)>& storedCallback) {
+                    return storedCallback.target_type() == callback.target_type(); // Compare type info
+                }),
+            listenerList.end());
     }
 
     void dispatch(const Event& event) {
