@@ -77,6 +77,7 @@ public:
 
 	void makeDeck() 
 	{
+		cards.clear();
 		for (int i = 0; i < 4;i++)
 		{
 			Card card = {"Ace",suits[i]};
@@ -115,6 +116,7 @@ public:
 	void makeHand(Deck* deck,int numOfCards)
 	{
 		cards.clear();
+
 		for (int i = 0; i < numOfCards;i++)
 		{
 			addCardToHand(deck->drawCard());

@@ -72,8 +72,6 @@ public:
 
 	Table()
 	{
-		deck.makeDeck();
-		deck.shuffleDeck();
 		dispatch.subscribe(EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1));	
 		dispatch.subscribe(EventType::PlayerExit, std::bind(&Table::removePlayer, this, std::placeholders::_1));
 		dispatch.subscribe(EventType::PlayerFold, std::bind(&Table::playerFold, this, std::placeholders::_1));
@@ -107,6 +105,15 @@ public:
 		players.push_back(player);
 	}
 
+	void printPlayers(std::vector<Player*> players)
+	{
+		tableMsg("[ PLAYERS ]");
+		for (Player* player : players)
+		{
+			tableMsg(player->getPlayerName());
+		}
+	}
+
 	void playRound()
 	{
 		pot = 0;
@@ -114,26 +121,36 @@ public:
 
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1]);
 		dispatch.dispatch(startRound);
-		playersInRound = players;
-		
+		printPlayers(playersInRound);
+		playersInRound = players;				//players used for stuff for the overall round, players in round used for play by play
+		printPlayers(playersInRound);
+
 		deck.makeDeck();
 		deck.shuffleDeck();
 		addCardsToTable(5);
+
 		int i = 0;
 		bool roundover = false;
+		for (Player* player : players)
+		{
+			Hand* hand = playersInRound[i]->getHand();
+			hand->makeHand(&deck, 2);
+		}
+
 		while(!roundover)
 		{
 			if(playersInRound.size() <= 1)
 			{
 				roundover = true;
+				break;
 			}
-
-			Hand* hand = playersInRound[i]->getHand();
-			hand->makeHand(&deck, 2);
+			i = i % playersInRound.size();
+			
 			playersInRound[i]->playTurn();
 			i++;
-			i = i % playersInRound.size();
+			
 		}
+
 		roundLeaderboard();
 	}
 
@@ -173,7 +190,7 @@ public:
 
 	void tableMsg(std::string msg)
 	{
-		std::cout << "\n\033[30;42m" << msg << std::endl;
+		std::cout << "\033[30;42m" << msg << std::endl;
 	}
 
 	void addCardsToTable(int numOfCards)

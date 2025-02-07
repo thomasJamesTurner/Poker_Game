@@ -27,7 +27,11 @@ static void randomStrategy(BotPlayer* bot)
 	float account = bot->getPlayerAccount();
 	if (account > 0)
 	{
-		float betAmount = (rand() % static_cast<int>(account * 0.5)) + bot->getMinimumBet(); // Random bet up to 50% balance
+		float betAmount = (rand() % static_cast<int>(account * 0.5)); // Random bet up to 50% balance
+		if (betAmount < bot->getMinimumBet()) {
+			bot->fold();
+			return;
+		}
 		bot->blind(betAmount);
 	}
 	else {

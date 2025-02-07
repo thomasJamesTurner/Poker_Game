@@ -115,6 +115,12 @@ public:
 				return;
 			}
 
+			if (amount == "c" || amount == "C" || amount == "check" || amount == "Check")
+			{
+				check();
+				return;
+			}
+
 			if (bet == account)
 			{
 				std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
@@ -139,6 +145,13 @@ public:
 		folded = true;
 		PlayerFoldEvent fold(this);
 		dispatcher->dispatch(fold);
+		std::cout << "\033[30;42m" << getPlayerName() <<" folded" << "\033[0m" << std::endl;
+	}
+
+	void check()
+	{
+		folded = true;
+		std::cout << "\033[30;42m" << getPlayerName() << " checked" << "\033[0m" << std::endl;
 	}
 
 	//____ getters and setters ____//
