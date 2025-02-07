@@ -18,7 +18,9 @@ class Table
 	float pot = 0.0f;
 	std::vector<Card> flop;
 	std::vector<Player*> players;
+	std::vector<Player*> playersInRound;
 	EventDispatcher dispatch;
+	
 public:
 	bool gameover = false;
 	void addToPot(const Event& event)
@@ -32,21 +34,41 @@ public:
 	void removePlayer(const Event& event)
 	{
 		const PlayerExitEvent& exitEvent = static_cast<const PlayerExitEvent&>(event);
+		Player* playerToRemove = exitEvent.player;
 
-		auto it = std::find(players.begin(), players.end(), exitEvent.player);
-		if (it != players.end()) 
+		if (!playerToRemove) { std::cout << "couldnt find player " <<playerToRemove<< std::endl;return; } // Avoid null pointer issues
+
+		auto it = std::find(players.begin(), players.end(), playerToRemove);
+		if (it != players.end())
 		{
-			players.erase(it);
+			players.erase(it);  
+			delete playerToRemove;
 		}
 
-		std::cout << "Player: " << exitEvent.player->getPlayerName() << " no longer at the table" << std::endl;
-		size_t size = players.size();
-		if (size == 1)
+		if (players.size() <= 1)
 		{
 			gameover = true;
 		}
+	}
+
+	void playerFold(const Event& event)
+	{
+		const PlayerFoldEvent& foldEvent = static_cast<const PlayerFoldEvent&>(event);
+
+		auto it = std::find(playersInRound.begin(), playersInRound.end(), foldEvent.player);
+
+		if (it != playersInRound.end())
+		{
+			playersInRound.erase(it);
+		}
+		else
+		{
+			playersInRound.pop_back();
+		}
+		size_t size = playersInRound.size();
 
 	}
+
 
 	Table()
 	{
@@ -54,6 +76,7 @@ public:
 		deck.shuffleDeck();
 		dispatch.subscribe(EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1));	
 		dispatch.subscribe(EventType::PlayerExit, std::bind(&Table::removePlayer, this, std::placeholders::_1));
+		dispatch.subscribe(EventType::PlayerFold, std::bind(&Table::playerFold, this, std::placeholders::_1));
 	}
 
 	
@@ -91,15 +114,25 @@ public:
 
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1]);
 		dispatch.dispatch(startRound);
+		playersInRound = players;
 		
 		deck.makeDeck();
 		deck.shuffleDeck();
 		addCardsToTable(5);
-		for (Player* player : players)
+		int i = 0;
+		bool roundover = false;
+		while(!roundover)
 		{
-			Hand* hand = player->getHand();
+			if(playersInRound.size() <= 1)
+			{
+				roundover = true;
+			}
+
+			Hand* hand = playersInRound[i]->getHand();
 			hand->makeHand(&deck, 2);
-			player->playTurn();
+			playersInRound[i]->playTurn();
+			i++;
+			i = i % playersInRound.size();
 		}
 		roundLeaderboard();
 	}
@@ -128,13 +161,13 @@ public:
 			std::cout << getCardName(card) << std::endl;
 		}
 		sortPlayers();
-		for (Player* player : players)
+		for (Player* player : playersInRound)
 		{
 			tableMsg("Player Name: " + player->getPlayerName() + " score: " + std::to_string(checkHand(*player->getHand())));
 		}
 
-		tableMsg("### Winner ###\n" + players[0]->getPlayerName());
-		PlayerWinEvent win(pot,(players[0]->getPlayerName()));
+		tableMsg("### Winner ###\n" + playersInRound[0]->getPlayerName());
+		PlayerWinEvent win(pot,(playersInRound[0]->getPlayerName()));
 		dispatch.dispatch(win);
 	}
 

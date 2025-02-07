@@ -12,6 +12,8 @@ class Player
 	Hand playerHand;
 	float account;
 	float minblind;
+	bool folded = false;
+	bool allin = false;
 	EventDispatcher* dispatcher;
 
 public:
@@ -25,7 +27,15 @@ public:
 		account = 0.0f;
 		minblind = 0.0f;
 	}
-	virtual ~Player() {}
+	virtual ~Player()
+	{
+		std::cout << "DELETING PLAYER " << getPlayerName() << std::endl;
+		dispatcher->unsubscribe(EventType::RoundStart, std::bind(&Player::startRound, this, std::placeholders::_1));
+		dispatcher->unsubscribe(EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1));
+		dispatcher->unsubscribe(EventType::PlayerBet, std::bind(&Player::setMinimumBet, this, std::placeholders::_1));
+	}
+
+	//____ event functions ____//
 
 	void winGame(const Event& event)
 	{
@@ -42,6 +52,7 @@ public:
 		{
 			std::cout<< "Player: "<< getPlayerName()<<" has no money left to play with and will exit" << std::endl;
 			PlayerExitEvent playerExit(this);
+
 			dispatcher->dispatch(playerExit);
 		}
 
@@ -66,6 +77,10 @@ public:
 
 	virtual void blind()
 	{
+		if (allin) { return; }
+		if (account < minblind) { fold(); return;}
+
+
 		std::string amount;
 		float bet = 0.0f;
 		while (bet > account || bet ==0.0f || bet<minblind && bet != account)
@@ -80,33 +95,35 @@ public:
 			}
 			catch (...)
 			{
-				amount = "";
-			}
-
-			if (amount == "")
-			{
 				bet = account;
-
 			}
-
-			if (bet == account)
-			{
-				std::cout << "\033[30;42m" << getPlayerName()<< " has gone ALL IN" << "\033[0m" << std::endl;
-			}
+			
 
 			if (bet > account)
 			{
 				std::cout << "\033[30;42m" << "Bet cannot be greater than the total of the account" << "\033[0m" << std::endl;
 			}
+
 			if (bet < minblind)
 			{
 				std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
 			}
+
+			if (amount == "f" || amount == "F" || amount == "fold" || amount == "Fold") 
+			{ 
+				fold();
+				return;
+			}
+
+			if (bet == account)
+			{
+				std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
+				allin = true;
+			}
+
 		}
 		makeBet(bet);
 	}
-
-	
 
 	void makeBet(float betAmount)
 	{
@@ -116,6 +133,15 @@ public:
 		showAccount();
 		std::cout << "\033[30;42m" << "Bet $" << betAmount << "\033[0m" << std::endl;
 	}
+
+	void fold()
+	{
+		folded = true;
+		PlayerFoldEvent fold(this);
+		dispatcher->dispatch(fold);
+	}
+
+	//____ getters and setters ____//
 
 	void setMinimumBet(const Event& event)
 	{
@@ -168,10 +194,19 @@ public:
 		return minblind;
 	}
 
+	inline bool isAllIN() const { return allin; }
+	inline bool isFolded() const { return folded; }
+
+	//____ game logic ____//
+
 	virtual void playTurn()
 	{
-		playerHand.showCards();
-		blind();
+		if (!folded)
+		{
+
+			playerHand.showCards();
+			blind();
+		}
 	}
 };
 
@@ -235,9 +270,17 @@ public:
 
 	void playTurn() override
 	{
+		if (this->isFolded()) { return; }
 		if (playTurnStrategy) 
 		{
-			playTurnStrategy(this);
+			try 
+			{
+				playTurnStrategy(this);
+			}
+			catch(...)
+			{
+				std::cout << "\n\033[37;41m" << "Bot strategy for Bot:" << "\033[0m" << " " << this->getPlayerName() << " \033[37;41m" << "Has encounted an error";
+			}
 		}
 		else {
 			std::cerr << "Error: playTurnStrategy is uninitialized!\n";
@@ -246,6 +289,9 @@ public:
 
 	void blind(float bet)
 	{
+		if (this->isAllIN()) { return; }
+		if (this->getPlayerAccount() < this->getMinimumBet()) { fold(); return; }
+
 		float account = this->getPlayerAccount();
 
 		if (bet > account)

@@ -44,6 +44,15 @@ public:
     }
 };
 
+class PlayerFoldEvent : public Event {
+public:
+    Player* player;
+    PlayerFoldEvent(Player* playerFolding) : player(playerFolding) {}
+    EventType getType() const override {
+        return EventType::PlayerFold;
+    }
+};
+
 class RoundStartEvent : public Event {
 public:
     float smallBlindAmount;

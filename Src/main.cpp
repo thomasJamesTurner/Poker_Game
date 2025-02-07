@@ -24,16 +24,25 @@ static void setBackgroundColour(int colour)
 
 static void randomStrategy(BotPlayer* bot)
 {
-	float betAmount = (rand() % static_cast<int>(bot->getPlayerAccount() * 0.5)) + bot->getMinimumBet(); // Random bet up to 50% balance
-	bot->blind(betAmount);
+	float account = bot->getPlayerAccount();
+	if (account > 0)
+	{
+		float betAmount = (rand() % static_cast<int>(account * 0.5)) + bot->getMinimumBet(); // Random bet up to 50% balance
+		bot->blind(betAmount);
+	}
+	else {
+		bot->fold();
+	}
 }
 
 int main()
 {
-	setBackgroundColour(42);
+	//setBackgroundColour(42);
 	
 	Table table;
 	table.addPlayer();
+	table.addPlayer(randomStrategy);
+	table.addPlayer(randomStrategy);
 	table.addPlayer(randomStrategy);
 	while(!table.gameover)
 	{
