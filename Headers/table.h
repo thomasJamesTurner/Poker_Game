@@ -38,10 +38,16 @@ public:
 
 		if (!playerToRemove) { std::cout << "couldnt find player " <<playerToRemove<< std::endl;return; } // Avoid null pointer issues
 
-		auto it = std::find(players.begin(), players.end(), playerToRemove);
-		if (it != players.end())
+		auto playerIt = std::find(players.begin(), players.end(), playerToRemove);
+		if (playerIt != players.end())
 		{
-			players.erase(it);  
+			players.erase(playerIt);  
+		}
+
+		auto roundIt = std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
+		if (roundIt != playersInRound.end())
+		{
+			playersInRound.erase(roundIt);
 			delete playerToRemove;
 		}
 
