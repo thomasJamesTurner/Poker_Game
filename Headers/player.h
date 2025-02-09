@@ -77,6 +77,27 @@ public:
 		
 	}
 
+	int gameInput()
+	{
+		std::string input;
+		std::cout << "\n\033[37;41m"	<< " [Player Input] " << "\033[0m" << std::endl;
+		std::cout << "\033[37;41m"		<< "f : fold" << "\033[0m" << std::endl;
+		std::cout << "\033[37;41m"		<< "c : check" << "\033[0m" << std::endl;
+		std::cout << "\033[37;41m"		<< "l : call" << "\033[0m" << std::endl;
+		std::cout << "\033[37;41m"		<< "r : raise" << "\033[0m" << std::endl;
+		std::cout << "\033[37;41m"		<< "a : all in" << "\033[0m" << std::endl;
+
+		std::cout << "\033[30;42m" << getPlayerName() << " action: " << "\033[0m";
+		std::getline(std::cin, input);
+		std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+		if (input == "f") { return 0; }
+		if (input == "c") { return 1; }
+		if (input == "l") { return 2; }
+		if (input == "r") { return 3; }
+		if (input == "a") { return 4; }
+		return -1;
+	}
+
 	virtual void blind()
 	{
 
@@ -84,56 +105,53 @@ public:
 		if (account < minblind) { fold(); return;}
 
 
-		std::string amount;
+		
 		float bet = 0.0f;
 
-		while (bet > account || bet<minblind && bet != account)
+		switch (gameInput())
 		{
-
-			bet = 0.0f;
+		case(0):
+			fold();
+			break;
+		case(1):
+			check();
+			break;
+		case(2):
+			call();
+			break;
+		case(3):
 			try
 			{
-				std::cout << "\033[30;42m" << getPlayerName() <<" bet amount: " << "\033[0m";
-				std::getline(std::cin, amount);
-				bet = std::stof(amount);
+				std::string input;
+				std::cout << "\033[30;42m" << "raise by: "<< "\033[0m";
+				std::getline(std::cin, input);
+				bet = std::stof(input);
 
+				if (account < minblind)
+				{
+					fold();
+					break;
+				}
+
+				if (bet == minblind)
+				{
+					call();
+				}
+				if (bet == account)
+				{
+					allIn();
+				}
 			}
 			catch (...)
 			{
-				bet = account;
+				bet = minblind;
 			}
-			
-
-			if (bet > account)
-			{
-				std::cout << "\033[30;42m" << "Bet cannot be greater than the total of the account" << "\033[0m" << std::endl;
-			}
-
-			if (bet < minblind)
-			{
-				std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
-			}
-
-			if (amount == "f" || amount == "F" || amount == "fold" || amount == "Fold") 
-			{ 
-				fold();
-				return;
-			}
-
-			if (amount == "c" || amount == "C" || amount == "check" || amount == "Check")
-			{
-				check();
-				return;
-			}
-
-			if (bet == account)
-			{
-				std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
-				allin = true;
-			}
-
-
+			break;
+		case(4):
+			allIn();
+			break;
 		}
+
 		makeBet(bet);
 	}
 
@@ -160,6 +178,18 @@ public:
 		std::cout << "\033[30;42m" << getPlayerName() << " checked" << "\033[0m" << std::endl;
 	}
 
+	void call()
+	{
+		makeBet(minblind);
+		std::cout << "\033[30;42m" << getPlayerName() << " called" << "\033[0m" << std::endl;
+	}
+
+	void allIn()
+	{
+		std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
+		allin = true;
+		makeBet(account);
+	}
 	//____ getters and setters ____//
 
 	void setMinimumBet(const Event& event)

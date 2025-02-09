@@ -42,6 +42,7 @@ public:
 		if (playerIt != players.end())
 		{
 			players.erase(playerIt);  
+
 		}
 
 		auto roundIt = std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
@@ -155,7 +156,6 @@ public:
 			i++;
 			
 		}
-		dispatch.printEvent();
 		roundLeaderboard();
 	}
 
