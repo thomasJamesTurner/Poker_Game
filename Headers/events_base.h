@@ -44,4 +44,19 @@ public:
             }
         }
     }
+    void clearEvents()
+    {
+        listeners.clear();
+    }
+
+    void printEvent()
+    {
+        for (const auto& pair : listeners) {
+            std::cout << "EventType: " << static_cast<int>(pair.first) << " has " << pair.second.size() << " listeners.\n";
+
+            for (size_t i = 0; i < pair.second.size(); ++i) {
+                std::cout << "  Listener " << i + 1 << ": (callable function)\n";
+            }
+        }
+    }
 };

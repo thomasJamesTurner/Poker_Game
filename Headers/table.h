@@ -118,7 +118,6 @@ public:
 	{
 		pot = 0;
 		flop.clear();
-
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1]);
 		dispatch.dispatch(startRound);
 		printPlayers(playersInRound);
@@ -150,7 +149,7 @@ public:
 			i++;
 			
 		}
-
+		dispatch.printEvent();
 		roundLeaderboard();
 	}
 

@@ -64,6 +64,8 @@ public:
 		const RoundStartEvent& startEvent = static_cast<const RoundStartEvent&>(event);
 
 		minblind = startEvent.bigBlindAmount;
+		folded = false;
+		allin = false;
 		if (startEvent.smallBlind == this)
 		{
 			makeBet(startEvent.smallBlindAmount);
@@ -77,14 +79,17 @@ public:
 
 	virtual void blind()
 	{
+
 		if (allin) { return; }
 		if (account < minblind) { fold(); return;}
 
 
 		std::string amount;
 		float bet = 0.0f;
-		while (bet > account || bet ==0.0f || bet<minblind && bet != account)
+
+		while (bet > account || bet<minblind && bet != account)
 		{
+
 			bet = 0.0f;
 			try
 			{
@@ -126,6 +131,7 @@ public:
 				std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
 				allin = true;
 			}
+
 
 		}
 		makeBet(bet);
@@ -321,6 +327,7 @@ public:
 		if (bet < this->getMinimumBet() && bet != account)
 		{
 			std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
+			throw;
 		}
 		this->makeBet(bet);
 		
