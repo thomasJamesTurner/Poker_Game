@@ -39,6 +39,27 @@ static void randomStrategy(BotPlayer* bot)
 	}
 }
 
+static void assertDominance(BotPlayer* bot)
+{
+	bot->allIn();
+	bot->subscribeToEvent(EventType::PlayerAllIn,
+		[&](const Event& event)->void
+		{
+			const PlayerAllInEvent& allInEvent = static_cast<const PlayerAllInEvent&>(event);
+			if (allInEvent.allInPlayer != bot)
+			{
+				bot->fold();
+			}
+		});
+}
+
+static void cardCounter(BotPlayer* bot)
+{
+	std::vector<Card> cards = (*bot->getHand()).cards;
+	
+
+}
+
 int main()
 {
 	//setBackgroundColour(42);
@@ -46,7 +67,7 @@ int main()
 	Table table;
 	table.addPlayer();
 	table.addPlayer(randomStrategy);
-	table.addPlayer(randomStrategy);
+	table.addPlayer(assertDominance);
 	table.addPlayer(randomStrategy);
 	while(!table.gameover)
 	{

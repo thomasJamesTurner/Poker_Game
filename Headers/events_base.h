@@ -7,7 +7,10 @@ enum class EventType {
     RoundEnd,
     PlayerExit,
     PlayerFold,
-    PlayerAllIn
+    PlayerAllIn,
+    PlayerCall,
+    PlayerCheck,
+    PlayerRaise
 };
 
 class Event {

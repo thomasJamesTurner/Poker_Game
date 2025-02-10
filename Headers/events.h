@@ -66,4 +66,43 @@ public:
     }
 };
 
+class PlayerAllInEvent : public Event {
+public:
+    Player* allInPlayer;
+
+    PlayerAllInEvent(Player* allInPlayer) :allInPlayer(allInPlayer) {}
+    EventType getType() const override {
+        return EventType::PlayerAllIn;
+    }
+};
+
+class PlayerCallEvent : public Event {
+public:
+    Player* callPlayer;
+
+    PlayerCallEvent(Player* callPlayer) :callPlayer(callPlayer) {}
+    EventType getType() const override {
+        return EventType::PlayerCall;
+    }
+};
+
+class PlayerCheckEvent : public Event {
+public:
+    Player* checkPlayer;
+
+    PlayerCheckEvent(Player* checkPlayer) :checkPlayer(checkPlayer) {}
+    EventType getType() const override {
+        return EventType::PlayerCheck;
+    }
+};
+
+class PlayerRaiseEvent : public Event {
+public:
+    Player* raisePlayer;
+
+    PlayerRaiseEvent(Player* raisePlayer) :raisePlayer(raisePlayer) {}
+    EventType getType() const override {
+        return EventType::PlayerCall;
+    }
+};
 

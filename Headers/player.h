@@ -80,12 +80,12 @@ public:
 	int gameInput()
 	{
 		std::string input;
-		std::cout << "\n\033[37;41m"	<< " [Player Input] " << "\033[0m" << std::endl;
-		std::cout << "\033[37;41m"		<< "f : fold" << "\033[0m" << std::endl;
-		std::cout << "\033[37;41m"		<< "c : check" << "\033[0m" << std::endl;
-		std::cout << "\033[37;41m"		<< "l : call" << "\033[0m" << std::endl;
-		std::cout << "\033[37;41m"		<< "r : raise" << "\033[0m" << std::endl;
-		std::cout << "\033[37;41m"		<< "a : all in" << "\033[0m" << std::endl;
+		std::cout << "\n\033[37;45m"	<< "[ Player Input ]" << "\033[0m" << std::endl;
+		std::cout <<   "\033[37;45m"	<< "f : fold" << "\033[0m" << std::endl;
+		std::cout <<   "\033[37;45m"	<< "c : check" << "\033[0m" << std::endl;
+		std::cout <<   "\033[37;45m"	<< "l : call" << "\033[0m" << std::endl;
+		std::cout <<   "\033[37;45m"	<< "r : raise" << "\033[0m" << std::endl;
+		std::cout <<   "\033[37;45m"	<< "a : all in" << "\033[0m" << std::endl;
 
 		std::cout << "\033[30;42m" << getPlayerName() << " action: " << "\033[0m";
 		std::getline(std::cin, input);
@@ -123,7 +123,7 @@ public:
 			try
 			{
 				std::string input;
-				std::cout << "\033[30;42m" << "raise by: "<< "\033[0m";
+				std::cout << "\033[30;42m" << "raise to: "<< "\033[0m";
 				std::getline(std::cin, input);
 				bet = std::stof(input);
 
@@ -167,8 +167,7 @@ public:
 	void fold()
 	{
 		folded = true;
-		PlayerFoldEvent fold(this);
-		dispatcher->dispatch(fold);
+		dispatcher->dispatch(PlayerFoldEvent(this));
 		std::cout << "\033[30;42m" << getPlayerName() <<" folded" << "\033[0m" << std::endl;
 	}
 
@@ -176,18 +175,21 @@ public:
 	{
 		folded = true;
 		std::cout << "\033[30;42m" << getPlayerName() << " checked" << "\033[0m" << std::endl;
+		dispatcher->dispatch(PlayerCheckEvent(this));
 	}
 
 	void call()
 	{
 		makeBet(minblind);
 		std::cout << "\033[30;42m" << getPlayerName() << " called" << "\033[0m" << std::endl;
+		dispatcher->dispatch(PlayerCallEvent(this));
 	}
 
 	void allIn()
 	{
 		std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
 		allin = true;
+		dispatcher->dispatch(PlayerAllInEvent(this));
 		makeBet(account);
 	}
 	//____ getters and setters ____//
@@ -211,6 +213,12 @@ public:
 		{
 			playerName = rand();
 		}
+	}
+
+
+	void subscribeToEvent(EventType eventType, std::function<void(const Event&)> callback)
+	{
+		dispatcher->subscribe(eventType, callback);
 	}
 
 	virtual void setPlayerName(std::string name)
