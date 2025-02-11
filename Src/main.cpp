@@ -39,26 +39,58 @@ static void randomStrategy(BotPlayer* bot)
 	}
 }
 
-static void assertDominance(BotPlayer* bot)
+static void assertDominanceInit(BotPlayer* bot)
 {
-	bot->allIn();
 	bot->subscribeToEvent(EventType::PlayerAllIn,
-		[&](const Event& event)->void
+		[bot](const Event& event)->void
 		{
+
 			const PlayerAllInEvent& allInEvent = static_cast<const PlayerAllInEvent&>(event);
 			if (allInEvent.allInPlayer != bot)
 			{
+
 				bot->fold();
+			}
+			else
+			{
+				return;
 			}
 		});
 }
-
-static void cardCounter(BotPlayer* bot)
+static void assertDominance(BotPlayer* bot)
 {
-	std::vector<Card> cards = (*bot->getHand()).cards;
-	
+	bot->allIn();
+}
+
+
+int count = 0;
+std::vector<Card> cardsInPlay;
+static void cardCounterInit(BotPlayer* bot)
+{
+	 
+	bot->subscribeToEvent(EventType::PlayerFold,
+		[&](const Event& event)->void
+		{
+			const PlayerFoldEvent& foldEvent = static_cast<const PlayerFoldEvent&>(event);
+			for (Card card : foldEvent.hand.cards)
+			{
+				cardsInPlay.push_back(card);
+			}
+		});
+
+	bot->subscribeToEvent(EventType::RoundStart,
+		[&](const Event& event)->void
+		{
+			count = 0;
+			cardsInPlay.clear();
+			cardsInPlay = (*bot->getHand()).cards;
+		});
+
+
 
 }
+
+//TODO add play on only good hands with random buff chance
 
 int main()
 {
@@ -67,7 +99,7 @@ int main()
 	Table table;
 	table.addPlayer();
 	table.addPlayer(randomStrategy);
-	table.addPlayer(assertDominance);
+	table.addPlayer(assertDominance,assertDominanceInit);
 	table.addPlayer(randomStrategy);
 	while(!table.gameover)
 	{

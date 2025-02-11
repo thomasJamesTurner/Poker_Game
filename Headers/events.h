@@ -47,7 +47,8 @@ public:
 class PlayerFoldEvent : public Event {
 public:
     Player* player;
-    PlayerFoldEvent(Player* playerFolding) : player(playerFolding) {}
+    Hand hand;
+    PlayerFoldEvent(Player* playerFolding,Hand hand) : player(playerFolding) , hand(hand){}
     EventType getType() const override {
         return EventType::PlayerFold;
     }

@@ -96,19 +96,33 @@ public:
 		return &dispatch;
 	}
 
-	void addPlayer(std::function<void(BotPlayer*)> playTurnStrategy = nullptr)
+	void addPlayer(std::function<void(BotPlayer*)> playTurnStrategy = nullptr, std::function<void(BotPlayer*)> initalizeBot = nullptr)
 	{
 		Player* player;
 		if (playTurnStrategy != nullptr)
 		{
+			BotPlayer* botPlayer;
 			
-			player = new BotPlayer(&deck, &dispatch,playTurnStrategy);
+			if (initalizeBot != nullptr)
+			{
+				botPlayer = new BotPlayer(&deck, &dispatch, playTurnStrategy, initalizeBot);
+			}
+			else
+			{
+				botPlayer = new BotPlayer(&deck, &dispatch, playTurnStrategy, [](BotPlayer* bot) {});
+			}
+
+
+			botPlayer->initalizerFunction(botPlayer);
+			player = botPlayer;
+
 		}
 		else 
 		{
 			player = new UserPlayer(&deck, &dispatch);
 			
 		}
+
 		players.push_back(player);
 	}
 

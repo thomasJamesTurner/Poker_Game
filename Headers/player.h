@@ -98,14 +98,11 @@ public:
 		return -1;
 	}
 
-	virtual void blind()
+	void blind()
 	{
-
 		if (allin) { return; }
 		if (account < minblind) { fold(); return;}
 
-
-		
 		float bet = 0.0f;
 
 		switch (gameInput())
@@ -155,6 +152,33 @@ public:
 		makeBet(bet);
 	}
 
+	void blind(float bet)
+	{
+		if (this->isAllIN()) { return; }
+		if (this->getPlayerAccount() < this->getMinimumBet()) { fold(); return; }
+
+		float account = this->getPlayerAccount();
+
+		if (bet > account)
+		{
+			bet = account;
+		}
+
+		if (bet == account)
+		{
+			std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
+		}
+
+
+		if (bet < this->getMinimumBet() && bet != account)
+		{
+			std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
+			throw;
+		}
+		this->makeBet(bet);
+
+	}
+
 	void makeBet(float betAmount)
 	{
 		account -= betAmount;
@@ -167,7 +191,7 @@ public:
 	void fold()
 	{
 		folded = true;
-		dispatcher->dispatch(PlayerFoldEvent(this));
+		dispatcher->dispatch(PlayerFoldEvent(this,*(this->getHand())));
 		std::cout << "\033[30;42m" << getPlayerName() <<" folded" << "\033[0m" << std::endl;
 	}
 
@@ -190,7 +214,7 @@ public:
 		std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
 		allin = true;
 		dispatcher->dispatch(PlayerAllInEvent(this));
-		makeBet(account);
+		blind(account);
 	}
 	//____ getters and setters ____//
 
@@ -305,28 +329,38 @@ public:
 class BotPlayer : public Player
 {
 	std::function<void(BotPlayer*)> playTurnStrategy;
-public:
-
 	
-	BotPlayer(Deck* deck, EventDispatcher* dispatch, std::function<void(BotPlayer*)> playTurnStrategy): Player(deck,dispatch)
+public:
+	std::function<void(BotPlayer*)> initalizerFunction;
+	
+	BotPlayer(Deck* deck, EventDispatcher* dispatch,std::function<void(BotPlayer*)> playTurnStrategy, std::function<void(BotPlayer*)> initalizeFunc): Player(deck,dispatch)
 	{
+		
 		if (playTurnStrategy) {
 			this->playTurnStrategy = playTurnStrategy;
 		}
 		else {
 			std::cerr << "Error: BotPlayer received a null playTurnStrategy!\n";
 		}
+		
 		std::random_device rd;
 		std::default_random_engine rng(rd());
 		std::uniform_int_distribution<int> dist(1, 1000);
 		setPlayerName("Bot_" + std::to_string(dist(rng)));
 		this->setAccountAmount(100.00f);
 		showAccount();
+		if (initalizeFunc) {
+			this->initalizerFunction = initalizeFunc;
+		}
+		else {
+			std::cerr << "Error: BotPlayer received a null playTurnStrategy!\n";
+		}
 	}
 
 
 	void playTurn() override
 	{
+
 		if (this->isFolded()) { return; }
 		if (playTurnStrategy) 
 		{
@@ -343,32 +377,4 @@ public:
 			std::cerr << "Error: playTurnStrategy is uninitialized!\n";
 		}
 	}
-
-	void blind(float bet)
-	{
-		if (this->isAllIN()) { return; }
-		if (this->getPlayerAccount() < this->getMinimumBet()) { fold(); return; }
-
-		float account = this->getPlayerAccount();
-
-		if (bet > account)
-		{
-			bet = account;
-		}
-
-		if (bet == account)
-		{
-			std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
-		}
-
-		
-		if (bet < this->getMinimumBet() && bet != account)
-		{
-			std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
-			throw;
-		}
-		this->makeBet(bet);
-		
-	}
-
 };
