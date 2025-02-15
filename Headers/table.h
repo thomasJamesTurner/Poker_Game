@@ -19,7 +19,8 @@ class Table
 	std::vector<Card> flop;
 	std::vector<Player*> players;
 	std::vector<Player*> playersInRound;
-	EventDispatcher dispatch;
+	EventHandler handler;
+	EventDispatcher dispatcher;
 	
 public:
 	bool gameover = false;
@@ -79,9 +80,9 @@ public:
 
 	Table()
 	{
-		dispatch.subscribe(EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1));	
-		dispatch.subscribe(EventType::PlayerExit, std::bind(&Table::removePlayer, this, std::placeholders::_1));
-		dispatch.subscribe(EventType::PlayerFold, std::bind(&Table::playerFold, this, std::placeholders::_1));
+		handler.subscribe({ EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1) });
+		handler.subscribe({ EventType::PlayerExit, std::bind(&Table::removePlayer, this, std::placeholders::_1) });
+		handler.subscribe({ EventType::PlayerFold, std::bind(&Table::playerFold, this, std::placeholders::_1) });
 	}
 
 	
@@ -93,7 +94,7 @@ public:
 
 	inline EventDispatcher* getEventDispatcher()
 	{
-		return &dispatch;
+		return &dispatcher;
 	}
 
 	void addPlayer(std::function<void(BotPlayer*)> playTurnStrategy = nullptr, std::function<void(BotPlayer*)> initalizeBot = nullptr)
@@ -105,11 +106,11 @@ public:
 			
 			if (initalizeBot != nullptr)
 			{
-				botPlayer = new BotPlayer(&deck, &dispatch, playTurnStrategy, initalizeBot);
+				botPlayer = new BotPlayer(&deck, &dispatcher, playTurnStrategy, initalizeBot);
 			}
 			else
 			{
-				botPlayer = new BotPlayer(&deck, &dispatch, playTurnStrategy, [](BotPlayer* bot) {});
+				botPlayer = new BotPlayer(&deck, &dispatcher, playTurnStrategy, [](BotPlayer* bot) {});
 			}
 
 
@@ -119,7 +120,7 @@ public:
 		}
 		else 
 		{
-			player = new UserPlayer(&deck, &dispatch);
+			player = new UserPlayer(&deck, &dispatcher);
 			
 		}
 
@@ -140,7 +141,7 @@ public:
 		pot = 0;
 		flop.clear();
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1]);
-		dispatch.dispatch(startRound);
+		handler.sendEvent(startRound);
 		printPlayers(playersInRound);
 		playersInRound = players;				//players used for stuff for the overall round, players in round used for play by play
 		printPlayers(playersInRound);
@@ -204,7 +205,7 @@ public:
 
 		tableMsg("### Winner ###\n" + playersInRound[0]->getPlayerName());
 		PlayerWinEvent win(pot,(playersInRound[0]->getPlayerName()));
-		dispatch.dispatch(win);
+		handler.sendEvent(win);
 	}
 
 	void tableMsg(std::string msg)

@@ -14,15 +14,16 @@ class Player
 	float minblind;
 	bool folded = false;
 	bool allin = false;
-	EventDispatcher* dispatcher;
+	
+	EventHandler handler;
 
 public:
 	Player(Deck* deck,EventDispatcher* dispatch)
 	{
-		this->dispatcher = dispatch;
-		dispatcher->subscribe(EventType::RoundStart, std::bind(&Player::startRound, this, std::placeholders::_1));
-		dispatcher->subscribe(EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1));
-		dispatcher->subscribe(EventType::PlayerBet, std::bind(&Player::setMinimumBet, this, std::placeholders::_1));
+		handler.setDispatcher(dispatch);
+		handler.subscribe({ EventType::RoundStart, std::bind(&Player::startRound, this, std::placeholders::_1) });
+		handler.subscribe({ EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1) });
+		handler.subscribe({ EventType::PlayerBet, std::bind(&Player::setMinimumBet, this, std::placeholders::_1)});
 		playerName = "";
 		account = 0.0f;
 		minblind = 0.0f;
@@ -30,9 +31,7 @@ public:
 	virtual ~Player()
 	{
 		std::cout << "DELETING PLAYER " << getPlayerName() << std::endl;
-		dispatcher->unsubscribe(EventType::RoundStart, std::bind(&Player::startRound, this, std::placeholders::_1));
-		dispatcher->unsubscribe(EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1));
-		dispatcher->unsubscribe(EventType::PlayerBet, std::bind(&Player::setMinimumBet, this, std::placeholders::_1));
+		delete &handler;
 	}
 
 	//____ event functions ____//
@@ -53,7 +52,7 @@ public:
 			std::cout<< "Player: "<< getPlayerName()<<" has no money left to play with and will exit" << std::endl;
 			PlayerExitEvent playerExit(this);
 
-			dispatcher->dispatch(playerExit);
+			handler.sendEvent(playerExit);
 		}
 
 		
@@ -183,7 +182,7 @@ public:
 	{
 		account -= betAmount;
 		PlayerBetEvent bet(playerName,betAmount);
-		dispatcher->dispatch(bet);
+		handler.sendEvent(bet);
 		showAccount();
 		std::cout << "\033[30;42m" << "Bet $" << betAmount << "\033[0m" << std::endl;
 	}
@@ -191,7 +190,7 @@ public:
 	void fold()
 	{
 		folded = true;
-		dispatcher->dispatch(PlayerFoldEvent(this,*(this->getHand())));
+		handler.sendEvent(PlayerFoldEvent(this,*(this->getHand())));
 		std::cout << "\033[30;42m" << getPlayerName() <<" folded" << "\033[0m" << std::endl;
 	}
 
@@ -199,21 +198,21 @@ public:
 	{
 		folded = true;
 		std::cout << "\033[30;42m" << getPlayerName() << " checked" << "\033[0m" << std::endl;
-		dispatcher->dispatch(PlayerCheckEvent(this));
+		handler.sendEvent(PlayerCheckEvent(this));
 	}
 
 	void call()
 	{
 		makeBet(minblind);
 		std::cout << "\033[30;42m" << getPlayerName() << " called" << "\033[0m" << std::endl;
-		dispatcher->dispatch(PlayerCallEvent(this));
+		handler.sendEvent(PlayerCallEvent(this));
 	}
 
 	void allIn()
 	{
 		std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
 		allin = true;
-		dispatcher->dispatch(PlayerAllInEvent(this));
+		handler.sendEvent(PlayerAllInEvent(this));
 		blind(account);
 	}
 	//____ getters and setters ____//
@@ -242,7 +241,7 @@ public:
 
 	void subscribeToEvent(EventType eventType, std::function<void(const Event&)> callback)
 	{
-		dispatcher->subscribe(eventType, callback);
+		handler.subscribe({ eventType, callback });
 	}
 
 	virtual void setPlayerName(std::string name)
