@@ -43,15 +43,15 @@ public:
 		if (playerIt != players.end())
 		{
 			players.erase(playerIt);  
-
-		}
-
-		auto roundIt = std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
-		if (roundIt != playersInRound.end())
-		{
-			playersInRound.erase(roundIt);
+			auto roundIt = std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
+			if (roundIt != playersInRound.end()) {
+				playersInRound.erase(roundIt);
+			}
 			delete playerToRemove;
 		}
+
+		
+		
 
 		if (players.size() <= 1)
 		{
@@ -80,6 +80,7 @@ public:
 
 	Table()
 	{
+		dispatcher.addHandler(&handler);
 		handler.subscribe({ EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1) });
 		handler.subscribe({ EventType::PlayerExit, std::bind(&Table::removePlayer, this, std::placeholders::_1) });
 		handler.subscribe({ EventType::PlayerFold, std::bind(&Table::playerFold, this, std::placeholders::_1) });
@@ -123,7 +124,7 @@ public:
 			player = new UserPlayer(&deck, &dispatcher);
 			
 		}
-
+		dispatcher.addHandler(player->getHandler());
 		players.push_back(player);
 	}
 

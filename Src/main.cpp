@@ -41,6 +41,7 @@ static void randomStrategy(BotPlayer* bot)
 
 static void assertDominanceInit(BotPlayer* bot)
 {
+	bot->setPlayerName("all in alan");
 	bot->subscribeToEvent(EventType::PlayerAllIn,
 		[bot](const Event& event)->void
 		{
@@ -49,7 +50,7 @@ static void assertDominanceInit(BotPlayer* bot)
 			if (allInEvent.allInPlayer != bot)
 			{
 
-				bot->fold();
+				bot->getHandler()->sendEvent(PlayerExitEvent(bot));
 			}
 			else
 			{

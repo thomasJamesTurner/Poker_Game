@@ -41,40 +41,52 @@ private:
 
 public:
     void addHandler(EventHandler* handler);
+    void removeHandler(EventHandler* handler);
     void dispatch(const Event& event);
 };
 
-// EventHandler definition
+
+//handles the events for entities in the event system
 class EventHandler
 {
 private:
-    EventDispatcher* dispatcher = nullptr; // Pointer to dispatcher
+    EventDispatcher* dispatcher = nullptr; 
     std::unordered_map<EventType, std::vector<std::function<void(const Event&)>>> listeners;
 
 public:
+    ~EventHandler() { std::cout << "deleting event handler" << std::endl; }
     void called(const Event& event);
     void sendEvent(const Event& event);
     void subscribe(const Listener& listener);
     void setDispatcher(EventDispatcher* dispatcher);
 };
 
-// Implement EventDispatcher methods outside class (after EventHandler is fully defined)
+//have to implement functions extenally of the class structure due to circular dependancies
 inline void EventDispatcher::addHandler(EventHandler* handler)
 {
     eventHandlers.push_back(handler);
+}
+
+inline void EventDispatcher::removeHandler(EventHandler* handler)
+{
+    auto handlerIt = std::find(eventHandlers.begin(), eventHandlers.end(), handler);
+    if (handlerIt != eventHandlers.end())
+    {
+        eventHandlers.erase(handlerIt);
+    }
 }
 
 inline void EventDispatcher::dispatch(const Event& event)
 {
     for (EventHandler* handler : eventHandlers)
     {
-        handler->called(event); // Now it's safe because EventHandler is fully defined
+        handler->called(event);
     }
 }
 
-// Implement EventHandler methods
 inline void EventHandler::called(const Event& event)
 {
+
     auto it = listeners.find(event.getType());
     if (it != listeners.end()) {
         for (auto& listener : it->second) {

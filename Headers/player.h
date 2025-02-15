@@ -14,11 +14,11 @@ class Player
 	float minblind;
 	bool folded = false;
 	bool allin = false;
-	
+	EventDispatcher* dispatch;
 	EventHandler handler;
 
 public:
-	Player(Deck* deck,EventDispatcher* dispatch)
+	Player(Deck* deck,EventDispatcher* dispatch) :dispatch(dispatch)
 	{
 		handler.setDispatcher(dispatch);
 		handler.subscribe({ EventType::RoundStart, std::bind(&Player::startRound, this, std::placeholders::_1) });
@@ -31,6 +31,7 @@ public:
 	virtual ~Player()
 	{
 		std::cout << "DELETING PLAYER " << getPlayerName() << std::endl;
+		dispatch->removeHandler(&handler);
 		delete &handler;
 	}
 
@@ -163,6 +164,11 @@ public:
 			bet = account;
 		}
 
+		if (bet == 0 || account == 0)
+		{
+			fold();
+		}
+
 		if (bet == account)
 		{
 			std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
@@ -274,6 +280,11 @@ public:
 		return minblind;
 	}
 
+	inline EventHandler* getHandler()
+	{
+		return &handler;
+	}
+
 	inline bool isAllIN() const { return allin; }
 	inline bool isFolded() const { return folded; }
 
@@ -361,6 +372,7 @@ public:
 	{
 
 		if (this->isFolded()) { return; }
+		if (this->isAllIN()) { return; }
 		if (playTurnStrategy) 
 		{
 			try 
