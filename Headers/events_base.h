@@ -43,6 +43,7 @@ public:
     void addHandler(EventHandler* handler);
     void removeHandler(EventHandler* handler);
     void dispatch(const Event& event);
+    void printHandlers();
 };
 
 
@@ -54,11 +55,11 @@ private:
     std::unordered_map<EventType, std::vector<std::function<void(const Event&)>>> listeners;
 
 public:
+    EventHandler(EventDispatcher* dispatch) : dispatcher(dispatch) {}
     ~EventHandler() { std::cout << "deleting event handler" << std::endl; }
     void called(const Event& event);
     void sendEvent(const Event& event);
     void subscribe(const Listener& listener);
-    void setDispatcher(EventDispatcher* dispatcher);
 };
 
 //have to implement functions extenally of the class structure due to circular dependancies
@@ -84,6 +85,11 @@ inline void EventDispatcher::dispatch(const Event& event)
     }
 }
 
+inline void EventDispatcher::printHandlers()
+{
+    std::cout<<"Number Of Handlers In Dispatcher: "<<eventHandlers.size()<<std::endl;
+}
+
 inline void EventHandler::called(const Event& event)
 {
 
@@ -101,14 +107,13 @@ inline void EventHandler::sendEvent(const Event& event)
     {
         dispatcher->dispatch(event);
     }
+    else
+    {
+        std::cout << "Dispatcher Was Null Pointer" << std::endl;
+    }
 }
 
 inline void EventHandler::subscribe(const Listener& listener)
 {
     listeners[listener.eventType].push_back(listener.callback);
-}
-
-inline void EventHandler::setDispatcher(EventDispatcher* dispatcher)
-{
-    this->dispatcher = dispatcher;
 }

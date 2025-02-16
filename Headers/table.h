@@ -19,7 +19,8 @@ class Table
 	std::vector<Card> flop;
 	std::vector<Player*> players;
 	std::vector<Player*> playersInRound;
-	EventHandler handler;
+	EventHandler* handler;
+	bool roundover = false;
 	EventDispatcher dispatcher;
 	
 public:
@@ -49,10 +50,6 @@ public:
 			}
 			delete playerToRemove;
 		}
-
-		
-		
-
 		if (players.size() <= 1)
 		{
 			gameover = true;
@@ -73,30 +70,26 @@ public:
 		{
 			playersInRound.pop_back();
 		}
-		size_t size = playersInRound.size();
+		if (playersInRound.size() == 1)
+		{
+			roundover = true;
+		}
 
 	}
 
 
 	Table()
 	{
-		dispatcher.addHandler(&handler);
-		handler.subscribe({ EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1) });
-		handler.subscribe({ EventType::PlayerExit, std::bind(&Table::removePlayer, this, std::placeholders::_1) });
-		handler.subscribe({ EventType::PlayerFold, std::bind(&Table::playerFold, this, std::placeholders::_1) });
+		handler = new EventHandler(&dispatcher);
+		dispatcher.addHandler(handler);
+		handler->subscribe({ EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerExit, std::bind(&Table::removePlayer, this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerFold, std::bind(&Table::playerFold, this, std::placeholders::_1) });
 	}
 
 	
 
-	inline Deck* getDeck()
-	{
-		return &deck;
-	}
-
-	inline EventDispatcher* getEventDispatcher()
-	{
-		return &dispatcher;
-	}
+	
 
 	void addPlayer(std::function<void(BotPlayer*)> playTurnStrategy = nullptr, std::function<void(BotPlayer*)> initalizeBot = nullptr)
 	{
@@ -142,17 +135,19 @@ public:
 		pot = 0;
 		flop.clear();
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1]);
-		handler.sendEvent(startRound);
+		handler->sendEvent(startRound);
 		printPlayers(playersInRound);
 		playersInRound = players;				//players used for stuff for the overall round, players in round used for play by play
 		printPlayers(playersInRound);
+		dispatcher.printHandlers();
+
 
 		deck.makeDeck();
 		deck.shuffleDeck();
 		addCardsToTable(5);
 
 		int i = 0;
-		bool roundover = false;
+		roundover = false;
 		for (Player* player : players)
 		{
 			Hand* hand = playersInRound[i]->getHand();
@@ -206,7 +201,7 @@ public:
 
 		tableMsg("### Winner ###\n" + playersInRound[0]->getPlayerName());
 		PlayerWinEvent win(pot,(playersInRound[0]->getPlayerName()));
-		handler.sendEvent(win);
+		handler->sendEvent(win);
 	}
 
 	void tableMsg(std::string msg)
@@ -602,5 +597,17 @@ public:
 			handScore += type.handVlaue;
 		}
 		return handScore;
+	}
+
+	//____ getters and setters ____//
+
+	inline Deck* getDeck()
+	{
+		return &deck;
+	}
+
+	inline EventDispatcher* getEventDispatcher()
+	{
+		return &dispatcher;
 	}
 };
