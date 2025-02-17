@@ -16,23 +16,24 @@ class Player
 	bool allin = false;
 	EventDispatcher* dispatch;
 	EventHandler* handler;
+	Deck* deck;
 
 public:
-	Player(Deck* deck, EventDispatcher* dispatch) 
-    : playerHand(), account(0.0f), minblind(0.0f), folded(false), allin(false), dispatch(dispatch)
-{
-    if (!dispatch) {
-        throw std::invalid_argument("EventDispatcher cannot be null!");
-    }
-
-	handler = new EventHandler(dispatch);
-
-    subscribeToEvent(EventType::RoundStart, std::bind(&Player::startRound, this, std::placeholders::_1));
-    subscribeToEvent(EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1));
-    subscribeToEvent(EventType::PlayerBet, std::bind(&Player::setMinimumBet, this, std::placeholders::_1));
-
-    playerName = "";
-}
+	Player(Deck* deck, EventDispatcher* dispatch) : deck(deck), account(0.0f), minblind(0.0f), folded(false), allin(false), dispatch(dispatch)
+	{
+	    if (!dispatch) 
+		{
+	        throw std::invalid_argument("EventDispatcher cannot be null!");
+	    }
+	
+		handler = new EventHandler(dispatch);
+	
+	    subscribeToEvent(EventType::RoundStart, std::bind(&Player::startRound, this, std::placeholders::_1));
+	    subscribeToEvent(EventType::PlayerWin, std::bind(&Player::winGame, this, std::placeholders::_1));
+	    subscribeToEvent(EventType::PlayerBet, std::bind(&Player::setMinimumBet, this, std::placeholders::_1));
+	
+	    playerName = "";
+	}
 
 	virtual ~Player()
 	{
@@ -67,8 +68,11 @@ public:
 	void startRound(const Event& event)
 	{
 		const RoundStartEvent& startEvent = static_cast<const RoundStartEvent&>(event);
-
 		minblind = startEvent.bigBlindAmount;
+
+		playerHand.cards.clear();
+		playerHand.makeHand(deck, 2);
+		
 		folded = false;
 		allin = false;
 

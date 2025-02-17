@@ -46,6 +46,7 @@ static void assertDominanceInit(BotPlayer* bot)
 		[bot](const Event& event)->void
 		{
 
+
 			const PlayerAllInEvent& allInEvent = static_cast<const PlayerAllInEvent&>(event);
 			if (allInEvent.allInPlayer != bot)
 			{

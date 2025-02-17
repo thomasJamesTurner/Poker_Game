@@ -19,8 +19,8 @@ class Table
 	std::vector<Card> flop;
 	std::vector<Player*> players;
 	std::vector<Player*> playersInRound;
+	std::vector<Player*> playersToRemove;
 	EventHandler* handler;
-	bool roundover = false;
 	EventDispatcher dispatcher;
 	
 public:
@@ -33,27 +33,37 @@ public:
 
 	}
 
-	void removePlayer(const Event& event)
+	void removePlayer()
 	{
-		const PlayerExitEvent& exitEvent = static_cast<const PlayerExitEvent&>(event);
-		Player* playerToRemove = exitEvent.player;
-
-		if (!playerToRemove) { std::cout << "couldnt find player " <<playerToRemove<< std::endl;return; } // Avoid null pointer issues
-
-		auto playerIt = std::find(players.begin(), players.end(), playerToRemove);
-		if (playerIt != players.end())
+		
+		for (Player* playerToRemove : playersToRemove)
 		{
-			players.erase(playerIt);  
-			auto roundIt = std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
-			if (roundIt != playersInRound.end()) {
-				playersInRound.erase(roundIt);
+			if (!playerToRemove) { std::cout << "couldnt find player " << playerToRemove << std::endl;return; } // Avoid null pointer issues
+
+			auto playerIt = std::find(players.begin(), players.end(), playerToRemove);
+			if (playerIt != players.end())
+			{
+				players.erase(playerIt);
+				auto roundIt = std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
+				if (roundIt != playersInRound.end()) {
+					playersInRound.erase(roundIt);
+				}
+				delete playerToRemove;
 			}
-			delete playerToRemove;
 		}
+		
 		if (players.size() <= 1)
 		{
 			gameover = true;
 		}
+	}
+
+	void playerExit(const Event& event)
+	{
+		const PlayerExitEvent& exitEvent = static_cast<const PlayerExitEvent&>(event);
+		Player* playerToRemove = exitEvent.player;
+
+		playersToRemove.push_back(playerToRemove);
 	}
 
 	void playerFold(const Event& event)
@@ -70,10 +80,6 @@ public:
 		{
 			playersInRound.pop_back();
 		}
-		if (playersInRound.size() == 1)
-		{
-			roundover = true;
-		}
 
 	}
 
@@ -83,8 +89,11 @@ public:
 		handler = new EventHandler(&dispatcher);
 		dispatcher.addHandler(handler);
 		handler->subscribe({ EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1) });
-		handler->subscribe({ EventType::PlayerExit, std::bind(&Table::removePlayer, this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerExit, std::bind(&Table::playerExit, this, std::placeholders::_1) });
 		handler->subscribe({ EventType::PlayerFold, std::bind(&Table::playerFold, this, std::placeholders::_1) });
+
+		deck.makeDeck();
+		deck.shuffleDeck();
 	}
 
 	
@@ -134,38 +143,37 @@ public:
 	{
 		pot = 0;
 		flop.clear();
-		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1]);
+		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1],&deck);
 		handler->sendEvent(startRound);
 		printPlayers(playersInRound);
 		playersInRound = players;				//players used for stuff for the overall round, players in round used for play by play
 		printPlayers(playersInRound);
 		dispatcher.printHandlers();
 
-
-		deck.makeDeck();
-		deck.shuffleDeck();
-		addCardsToTable(5);
-
-		int i = 0;
-		roundover = false;
-		for (Player* player : players)
+		for(int i = 0; i<4;i++)
 		{
-			Hand* hand = playersInRound[i]->getHand();
-			hand->makeHand(&deck, 2);
-		}
-
-		while(!roundover)
-		{
-			if(playersInRound.size() <= 1)
+			switch (i)
 			{
-				roundover = true;
+			case(1):
+				addCardsToTable(3);
+				break;
+			case(2):
+				addCardsToTable(1);
+				break;
+			case(3):
+				addCardsToTable(1);
 				break;
 			}
-			i = i % playersInRound.size();
-			
-			playersInRound[i]->playTurn();
-			i++;
-			
+			printTable();
+			for (Player* player : playersInRound)
+			{
+				player->playTurn();
+			}	
+			if (playersInRound.size() <= 1)
+			{
+				break;
+			}
+			removePlayer();
 		}
 		roundLeaderboard();
 	}
@@ -214,8 +222,15 @@ public:
 		for (int i = 0; i < numOfCards; i++)
 		{
 			Card card = deck.drawCard();
-			std::cout << getCardName(card) << std::endl;
 			flop.push_back(card);
+		}
+	}
+
+	void printTable()
+	{
+		for (Card card : flop)
+		{
+			std::cout << getCardName(card) << std::endl;
 		}
 	}
 

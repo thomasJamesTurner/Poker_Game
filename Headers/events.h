@@ -60,8 +60,9 @@ public:
     float bigBlindAmount;
     Player* smallBlind;
     Player* bigBlind;
+    Deck* deck;
 
-    RoundStartEvent(float smallBlindAmount, float bigBlindAmount, Player* smallBlind, Player* bigBlind) :smallBlindAmount(smallBlindAmount),bigBlindAmount(bigBlindAmount), smallBlind(smallBlind), bigBlind(bigBlind) {}
+    RoundStartEvent(float smallBlindAmount, float bigBlindAmount, Player* smallBlind, Player* bigBlind,Deck* deck) :smallBlindAmount(smallBlindAmount),bigBlindAmount(bigBlindAmount), smallBlind(smallBlind), bigBlind(bigBlind),deck(deck) {}
     EventType getType() const override {
         return EventType::RoundStart;
     }
