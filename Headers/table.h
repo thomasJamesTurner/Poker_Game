@@ -145,13 +145,14 @@ public:
 		flop.clear();
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1],&deck);
 		handler->sendEvent(startRound);
-		printPlayers(playersInRound);
 		playersInRound = players;				//players used for stuff for the overall round, players in round used for play by play
-		printPlayers(playersInRound);
 		dispatcher.printHandlers();
 
 		for(int i = 0; i<4;i++)
 		{
+			std::cout << "\n\n" << std::endl;
+			printPlayers(playersInRound);
+			std::cout << "\n" << std::endl;
 			switch (i)
 			{
 			case(1):

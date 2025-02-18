@@ -11,7 +11,7 @@ class Player
 	std::string playerName;
 	Hand playerHand;
 	float account;
-	float minblind;
+	float minBet;
 	bool folded = false;
 	bool allin = false;
 	EventDispatcher* dispatch;
@@ -19,7 +19,8 @@ class Player
 	Deck* deck;
 
 public:
-	Player(Deck* deck, EventDispatcher* dispatch) : deck(deck), account(0.0f), minblind(0.0f), folded(false), allin(false), dispatch(dispatch)
+
+	Player(Deck* deck, EventDispatcher* dispatch) : deck(deck), account(0.0f), minBet(0.0f), folded(false), allin(false), dispatch(dispatch)
 	{
 	    if (!dispatch) 
 		{
@@ -34,12 +35,12 @@ public:
 	
 	    playerName = "";
 	}
-
 	virtual ~Player()
 	{
 		std::cout << "DELETING PLAYER " << getPlayerName() << std::endl;
 		dispatch->removeHandler(handler);
 	}
+
 
 	//____ event functions ____//
 
@@ -64,11 +65,10 @@ public:
 
 		
 	}
-
 	void startRound(const Event& event)
 	{
 		const RoundStartEvent& startEvent = static_cast<const RoundStartEvent&>(event);
-		minblind = startEvent.bigBlindAmount;
+		minBet = startEvent.bigBlindAmount;
 
 		playerHand.cards.clear();
 		playerHand.makeHand(deck, 2);
@@ -82,7 +82,7 @@ public:
 		}
 		if (startEvent.bigBlind == this)
 		{
-			makeBet(minblind);
+			makeBet(minBet);
 		}
 		
 	}
@@ -97,103 +97,89 @@ public:
 		std::cout <<   "\033[37;45m"	<< "r : raise" << "\033[0m" << std::endl;
 		std::cout <<   "\033[37;45m"	<< "a : all in" << "\033[0m" << std::endl;
 
-		std::cout << "\033[30;42m" << getPlayerName() << " action: " << "\033[0m";
-		std::getline(std::cin, input);
-		std::transform(input.begin(), input.end(), input.begin(), ::tolower);
-		if (input == "f") { return 0; }
-		if (input == "c") { return 1; }
-		if (input == "l") { return 2; }
-		if (input == "r") { return 3; }
-		if (input == "a") { return 4; }
-		return -1;
+		int result = 0;
+		do
+		{
+			std::cout << "\n\033[30;42m" << getPlayerName() << " action: " << "\033[0m";
+			std::getline(std::cin, input);
+			std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+			if (input == "f" || input =="fold")							{ result = 0; break; }
+			if (input == "c" || input =="check")						{ result = 1; break; }
+			if (input == "l" || input =="call")							{ result = 2; break; }
+			if (input == "r" || input =="raise")						{ result = 3; break; }
+			if (input == "a" || input == "all in" || input =="allin")	{ result = 4; break; }
+			result -1;
+			std::cout << "\033[30;42m" << "Please Input A Valid Action" << "\033[0m";
+		} while (result != -1);
+		return result;
+		
+		
 	}
-
 	void blind()
 	{
 		if (allin) { return; }
-		if (account < minblind) { fold(); return;}
-
-		float bet = 0.0f;
-
-		switch (gameInput())
-		{
-		case(0):
-			fold();
-			break;
-		case(1):
-			check();
-			break;
-		case(2):
-			call();
-			break;
-		case(3):
-			try
+		bool badAction = false;
+		do{
+			switch (gameInput())
 			{
-				std::string input;
-				std::cout << "\033[30;42m" << "raise to: "<< "\033[0m";
-				std::getline(std::cin, input);
-				bet = std::stof(input);
-
-				if (account < minblind)
+			case(0):
+				fold();
+				break;
+			case(1):
+				check();
+				break;
+			case(2):
+				call();
+				break;
+			case(3):
+				try
 				{
-					fold();
-					break;
+					std::string input;
+					std::cout << "\033[30;42m" << "raise by: " << "\033[0m";
+					std::getline(std::cin, input);
+					float bet = std::stof(input);
+					badAction = raise(bet) == -1;
 				}
-
-				if (bet == minblind)
+				catch (...)
 				{
 					call();
 				}
-				if (bet == account)
-				{
-					allIn();
-				}
+				break;
+			case(4):
+				allIn();
+				break;
 			}
-			catch (...)
-			{
-				bet = minblind;
-			}
-			break;
-		case(4):
-			allIn();
-			break;
-		}
-
-		makeBet(bet);
+		} while (badAction);
+		
 	}
-
-	void blind(float bet)
+	
+	int validateBet(float bet)
 	{
-		if (this->isAllIN()) { return; }
-		if (this->getPlayerAccount() < this->getMinimumBet()) { fold(); return; }
-
-		float account = this->getPlayerAccount();
-
+		if (bet == 0)
+		{
+			return 0;
+		}
+		if (getMinimumBet() > bet)
+		{
+			return -1;
+		}
+		if (getMinimumBet() == bet)
+		{
+			return 1;
+		}
 		if (bet > account)
 		{
-			bet = account;
+			return -2;
 		}
-
-		if (bet == 0 || account == 0)
-		{
-			fold();
-		}
-
 		if (bet == account)
 		{
-			std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
+			return 3;
 		}
-
-
-		if (bet < this->getMinimumBet() && bet != account)
+		if (bet > getMinimumBet())
 		{
-			std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
-			throw;
+			return 2;
 		}
-		this->makeBet(bet);
-
 	}
-
 	void makeBet(float betAmount)
 	{
 		account -= betAmount;
@@ -202,41 +188,48 @@ public:
 		showAccount();
 		std::cout << "\033[30;42m" << "Bet $" << betAmount << "\033[0m" << std::endl;
 	}
-
 	void fold()
 	{
 		folded = true;
 		handler->sendEvent(PlayerFoldEvent(this,*(this->getHand())));
 		std::cout << "\033[30;42m" << getPlayerName() <<" folded" << "\033[0m" << std::endl;
 	}
-
 	void check()
 	{
 		folded = true;
 		std::cout << "\033[30;42m" << getPlayerName() << " checked" << "\033[0m" << std::endl;
 		handler->sendEvent(PlayerCheckEvent(this));
 	}
-
 	void call()
 	{
-		makeBet(minblind);
+		makeBet(minBet);
 		std::cout << "\033[30;42m" << getPlayerName() << " called" << "\033[0m" << std::endl;
 		handler->sendEvent(PlayerCallEvent(this));
 	}
-
 	void allIn()
 	{
 		std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
 		allin = true;
 		handler->sendEvent(PlayerAllInEvent(this));
-		blind(account);
+		makeBet(account);
 	}
+	int raise(float raise)
+	{
+		float bet = raise + getMinimumBet();
+		if(validateBet(bet)== -1)
+		{ 
+			return -1;
+		}
+		makeBet(bet);
+		return 1;
+	}
+
 	//____ getters and setters ____//
 
 	void setMinimumBet(const Event& event)
 	{
 		const PlayerBetEvent& betEvent = static_cast<const PlayerBetEvent&>(event);
-		minblind = betEvent.betAmount;
+		minBet = betEvent.betAmount;
 	}
 
 	void setAccountAmount(float amount)
@@ -275,6 +268,11 @@ public:
 		std::cout << "\033[30;42m" << playerName <<" Balance $" << account << "\033[0m" << std::endl;
 	}
 
+	inline void showMinBet()
+	{
+		std::cout << "\033[30;42m" <<"Prevoius Bet: " << minBet << "\033[0m" << std::endl;
+	}
+
 	inline Hand* getHand()
 	{
 		return &playerHand;
@@ -287,7 +285,7 @@ public:
 
 	inline float getMinimumBet()
 	{
-		return minblind;
+		return minBet;
 	}
 
 	inline EventHandler* getHandler()
@@ -306,6 +304,8 @@ public:
 		if (!folded)
 		{
 			playerHand.showCards();
+			showAccount();
+			showMinBet();
 			blind();
 		}
 	}
@@ -377,6 +377,46 @@ public:
 		}
 	}
 
+	void blind(float bet)
+	{
+		if (this->isAllIN()) { return; }
+		int betType = validateBet(bet);
+		switch (betType)
+		{
+		case(0):
+			this->fold();
+			break;
+		case(1):
+			this->call();
+			break;
+		case(2):
+			this->raise(bet - this->getMinimumBet());
+			break;
+		case(3):
+			this->allIn();
+			break;
+		case(-1):
+			if (getMinimumBet() > getPlayerAccount())
+			{
+				this->allIn();
+			}
+			else
+			{
+				this->call();
+			}
+			break;
+		case(-2):
+			this->allIn();
+		}
+
+		if (bet < this->getMinimumBet() && bet != getPlayerAccount())
+		{
+			std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
+			throw;
+		}
+		this->makeBet(bet);
+
+	}
 
 	void playTurn() override
 	{
