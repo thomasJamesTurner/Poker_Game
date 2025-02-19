@@ -71,7 +71,6 @@ public:
 		}
 	}
 
-
 	void playerExit(const Event& event)
 	{
 		const PlayerExitEvent& exitEvent = static_cast<const PlayerExitEvent&>(event);
@@ -155,7 +154,6 @@ public:
 
 	void playRound()
 	{
-		removePlayer();
 		deck.makeDeck();
 		std::cout<<"\n" << std::endl;
 		deck.shuffleDeck();
@@ -197,6 +195,7 @@ public:
 			removePlayer();
 		}
 		roundLeaderboard();
+		removePlayer();
 	}
 
 	void sortPlayers()
