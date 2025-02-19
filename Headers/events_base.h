@@ -25,6 +25,10 @@ class Event {
 public:
     virtual ~Event() = default;
     virtual EventType getType() const = 0;
+    void printEvent () const
+    {
+        std::cout << "Event dispatched: " << typeid(*this).name() << std::endl;
+    }
 };
 
 struct Listener
@@ -79,6 +83,9 @@ inline void EventDispatcher::removeHandler(EventHandler* handler)
 
 inline void EventDispatcher::dispatch(const Event& event)
 {
+#ifdef _DEBUG
+    event.printEvent();
+#endif
     for (EventHandler* handler : eventHandlers)
     {
         handler->called(event);

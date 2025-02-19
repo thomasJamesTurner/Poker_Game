@@ -35,9 +35,11 @@ public:
 
 	void removePlayer()
 	{
+#ifdef _DEBUG
 		std::cout	<< "Before removal - Players: " << players.size()
 					<< ", PlayersInRound: " << playersInRound.size()
 					<< ", PlayersToRemove: " << playersToRemove.size() << std::endl;
+#endif
 
 		for (auto it = playersToRemove.begin(); it != playersToRemove.end();)
 		{
@@ -60,11 +62,11 @@ public:
 			}
 			it = playersToRemove.erase(it);
 		}
-
+#ifdef _DEBUG
 		std::cout << "After removal - Players: " << players.size()
 			<< ", PlayersInRound: " << playersInRound.size()
 			<< ", PlayersToRemove: " << playersToRemove.size() << std::endl;
-
+#endif
 		if (players.size() <= 1) 
 		{
 			gameover = true;
@@ -162,7 +164,9 @@ public:
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1],&deck);
 		handler->sendEvent(startRound);
 		playersInRound = players;				//players used for stuff for the overall round, players in round used for play by play
+#ifdef _DEBUG
 		dispatcher.printHandlers();
+#endif
 
 		for(int i = 0; i<4;i++)
 		{

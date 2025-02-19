@@ -294,7 +294,9 @@ public:
 
 	inline EventHandler* getHandler()
 	{
+#ifdef _DEBUG
 		std::cout << "getting " << playerName << " handler" << std::endl;
+#endif
 		return handler;
 	}
 
