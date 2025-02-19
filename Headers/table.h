@@ -358,7 +358,7 @@ public:
 	bool checkStraight(Hand hand)
 	{
 		std::vector<Card> cards = hand.cards;
-		int size = cards.size();
+		size_t size = cards.size();
 		sortCardsByRank(cards);
 
 		int lastCardVal = getRankValue(cards[0].value);
@@ -389,7 +389,7 @@ public:
 	bool checkFlush(Hand hand)
 	{
 		hand.cards;
-		int size = hand.cards.size() - 1;
+		size_t size = hand.cards.size() - 1;
 		sortCardsBySuit(hand.cards);
 		Card lastCard = hand.cards[0];
 		int suitCount[4] = {0};
@@ -437,7 +437,7 @@ public:
 	{
 		std::vector<Card> cards = hand.cards;
 		sortCardsBySuit(cards);
-		int size = cards.size();
+		size_t size = cards.size();
 		bool isAce = false;
 		for (Card card : cards)
 		{
