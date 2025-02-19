@@ -70,9 +70,16 @@ public:
 	std::vector<Card> cards;
 	Card drawCard() 
 	{
-		Card topCard = cards.back();
-		cards.pop_back();
-		return topCard;
+		try {
+			Card topCard = cards.back();
+			cards.pop_back();
+			return topCard;
+		}
+		catch(...)
+		{ 
+			std::cout << "couldnt draw card: deck depleated" << std::endl;
+		}
+		
 	}
 
 	void makeDeck() 
@@ -82,7 +89,7 @@ public:
 		{
 			Card card = {"Ace",suits[i]};
 			cards.push_back(card);
-			for (int j = 0;j < 12; j++)
+			for (int j = 1;j < 13; j++)
 			{
 				card.suit = suits[i];
 				card.value = ranks[j];
@@ -91,6 +98,15 @@ public:
 			}
 		}
 	}
+
+	void printDeck()
+	{
+		for (Card card : cards)
+		{
+			std::cout << getCardName(card) << std::endl;
+		}
+	}
+
 	void shuffleDeck()
 	{
 		std::random_device rd;

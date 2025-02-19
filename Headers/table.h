@@ -6,7 +6,7 @@
 #include "events.h"
 
 
-struct handType
+struct HandType
 {
 	int handVlaue;
 	std::string cardString;
@@ -35,28 +35,42 @@ public:
 
 	void removePlayer()
 	{
-		
-		for (Player* playerToRemove : playersToRemove)
+		std::cout	<< "Before removal - Players: " << players.size()
+					<< ", PlayersInRound: " << playersInRound.size()
+					<< ", PlayersToRemove: " << playersToRemove.size() << std::endl;
+
+		for (auto it = playersToRemove.begin(); it != playersToRemove.end();)
 		{
-			if (!playerToRemove) { std::cout << "couldnt find player " << playerToRemove << std::endl;return; } // Avoid null pointer issues
+			Player* playerToRemove = *it;
+			if (!playerToRemove) {
+				std::cout << "Invalid player detected" << std::endl;
+				it = playersToRemove.erase(it);
+				continue;
+			}
 
 			auto playerIt = std::find(players.begin(), players.end(), playerToRemove);
-			if (playerIt != players.end())
-			{
+			auto roundIt = std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
+
+			if (playerIt != players.end()) {
 				players.erase(playerIt);
-				auto roundIt = std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
-				if (roundIt != playersInRound.end()) {
-					playersInRound.erase(roundIt);
-				}
 				delete playerToRemove;
 			}
+			if (roundIt != playersInRound.end()) {
+				playersInRound.erase(roundIt);
+			}
+			it = playersToRemove.erase(it);
 		}
-		
-		if (players.size() <= 1)
+
+		std::cout << "After removal - Players: " << players.size()
+			<< ", PlayersInRound: " << playersInRound.size()
+			<< ", PlayersToRemove: " << playersToRemove.size() << std::endl;
+
+		if (players.size() <= 1) 
 		{
 			gameover = true;
 		}
 	}
+
 
 	void playerExit(const Event& event)
 	{
@@ -141,6 +155,10 @@ public:
 
 	void playRound()
 	{
+		removePlayer();
+		deck.makeDeck();
+		std::cout<<"\n" << std::endl;
+		deck.shuffleDeck();
 		pot = 0;
 		flop.clear();
 		RoundStartEvent startRound(10.0f, 20.0f,players[0],players[1],&deck);
@@ -150,6 +168,7 @@ public:
 
 		for(int i = 0; i<4;i++)
 		{
+			
 			std::cout << "\n\n" << std::endl;
 			printPlayers(playersInRound);
 			std::cout << "\n" << std::endl;
@@ -169,7 +188,8 @@ public:
 			for (Player* player : playersInRound)
 			{
 				player->playTurn();
-			}	
+			}
+			std::cout << "Players: " << players.size() << ", PlayersInRound: " << playersInRound.size() << std::endl;
 			if (playersInRound.size() <= 1)
 			{
 				break;
@@ -203,10 +223,7 @@ public:
 			std::cout << getCardName(card) << std::endl;
 		}
 		sortPlayers();
-		for (Player* player : playersInRound)
-		{
-			tableMsg("Player Name: " + player->getPlayerName() + " score: " + std::to_string(checkHand(*player->getHand())));
-		}
+		printPlayerHands();
 
 		tableMsg("### Winner ###\n" + playersInRound[0]->getPlayerName());
 		PlayerWinEvent win(pot,(playersInRound[0]->getPlayerName()));
@@ -480,7 +497,7 @@ public:
 		
 	}
 
-	handType checkPairs(Hand hand)
+	HandType checkPairs(Hand hand)
 	{
 		std::map<std::string, int> map;
 		std::string cardString;
@@ -543,22 +560,65 @@ public:
 		if (fourOfAKind)
 		{
 			return { 800,cardString };
-			tableMsg("Four Of A Kind");
 		}
 		if (threeOfAKind && pairs > 0)
 		{
-			tableMsg("Full House");
 			return{ 700 ,cardString };
 		}
 		if (threeOfAKind)
 		{
-			tableMsg("Three of a kind");
-			return { 700 ,cardString };;
+			return { 400 ,cardString };;
 		}
 		if (pairs > 0)
 		{
 			tableMsg(std::to_string(pairs) + " Pair");
 			return {pairs * 100 + val, cardString };
+		}
+	}
+
+
+	void printPlayerHands()
+	{
+		for (Player* player : playersInRound)
+		{
+			int handVal = checkHand(*(player->getHand()));
+			switch (handVal)
+			{
+			case(1000):
+				tableMsg("Royal Flush");
+				break;
+			case(900):
+				tableMsg("Straight Flush");
+				break;
+			case(800):
+				tableMsg("Four Of A Kind");
+				break;
+			case(700):
+				tableMsg("Full House");
+				break;
+			case(600):
+				tableMsg("flush");
+				break;
+			case(500):
+				tableMsg("straight");
+				break;
+			case(400):
+				tableMsg("Three of a kind");
+				break;
+			}
+			if (handVal > 300)
+			{
+				return;
+			}
+			HandType handType = checkPairs(*(player->getHand()));
+			if (handType.handVlaue > 200 && handType.handVlaue < 300)
+			{
+				tableMsg("2 pair" + handType.cardString);
+			}
+			if (handType.handVlaue> 100 && handType.handVlaue < 200)
+			{
+				tableMsg("1 pair" + handType.cardString);
+			}
 		}
 	}
 
@@ -578,7 +638,6 @@ public:
 		{
 			if (checkRoyalFlush(hand))
 			{
-				tableMsg("Royal Flush");
 				handScore = 1000;
 				return handScore;
 			}
@@ -586,30 +645,22 @@ public:
 
 		if (flush && straight)
 		{
-			tableMsg("Straight Flush");
 			handScore = 900;
 			return handScore;
 		}
 
 		if (flush)
 		{
-			tableMsg("flush");
 			handScore = 600;
 		}
 
 		if (straight)
 		{
-			tableMsg("straight");
 			handScore = 500;
 		}
-
-		
-
-		
-		
 		if (handScore == 0)
 		{
-			handType type = checkPairs(hand);
+			HandType type = checkPairs(hand);
 			handScore += type.handVlaue;
 		}
 		return handScore;

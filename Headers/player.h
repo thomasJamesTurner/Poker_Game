@@ -39,6 +39,7 @@ public:
 	{
 		std::cout << "DELETING PLAYER " << getPlayerName() << std::endl;
 		dispatch->removeHandler(handler);
+		delete handler;
 	}
 
 
@@ -55,7 +56,7 @@ public:
 			account += winEvent.winnings;
 			showAccount();
 		}
-		if (account <= 0)
+		if (this->getPlayerAccount() <= 0)
 		{
 			std::cout<< "Player: "<< getPlayerName()<<" has no money left to play with and will exit" << std::endl;
 			PlayerExitEvent playerExit(this);
@@ -108,9 +109,9 @@ public:
 			if (input == "l" || input =="call")							{ result = 2; break; }
 			if (input == "r" || input =="raise")						{ result = 3; break; }
 			if (input == "a" || input == "all in" || input =="allin")	{ result = 4; break; }
-			result -1;
+			result = -1;
 			std::cout << "\033[30;42m" << "Please Input A Valid Action" << "\033[0m";
-		} while (result != -1);
+		} while (result == -1);
 		return result;
 		
 		
@@ -119,19 +120,21 @@ public:
 	{
 		if (allin) { return; }
 		bool badAction = false;
-		do{
-			switch (gameInput())
+		
+		switch (gameInput())
+		{
+		case(0):
+			fold();
+			break;
+		case(1):
+			check();
+			break;
+		case(2):
+			call();
+			break;
+		case(3):
+			do
 			{
-			case(0):
-				fold();
-				break;
-			case(1):
-				check();
-				break;
-			case(2):
-				call();
-				break;
-			case(3):
 				try
 				{
 					std::string input;
@@ -142,14 +145,15 @@ public:
 				}
 				catch (...)
 				{
-					call();
+					std::cout << "\033[30;42m" << "Please Enter Valid Input" << "\033[0m" << std::endl;
+					badAction = true;
 				}
-				break;
-			case(4):
-				allIn();
-				break;
-			}
-		} while (badAction);
+			} while (badAction);
+			break;
+		case(4):
+			allIn();
+			break;
+		}
 		
 	}
 	
