@@ -5,3 +5,6 @@
 Bin/*
 [bB]uild/*
 .vs/*
+
+cmake-build-debug/
+.idea/

@@ -1,7 +1,7 @@
 #include "../headers/cards.h"
 #include "../headers/table.h"
 #include "../headers/player.h"
-#include <windows.h>
+#include <Spritter/Spritter.h>
 
 static void randomStrategy(BotPlayer* bot)
 {
@@ -84,8 +84,31 @@ static void cardCounter(BotPlayer* bot)
 
 //TODO add play on only good hands with random buff chance
 
+using namespace Spritter;
+using namespace Spritter::Math;
+
+class PokerGame : public Game
+{
+	void Initialize() override { }
+
+	void Update(const float dt) override { }
+
+	void Draw() override
+	{
+		GraphicsDevice->Clear(Color::CornflowerBlue());
+	}
+};
+
 int main()
 {
+	GameOptions options
+	{
+		/* Name: */ "Poker Game",
+		/* Size: */ { 1280, 720 }
+	};
+	PokerGame game;
+	game.Run(options);
+
 	//setBackgroundColour(42);
 	
 	Table table;
