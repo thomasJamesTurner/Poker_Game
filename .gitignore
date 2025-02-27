@@ -4,5 +4,5 @@
 *.vcxproj.user
 *.sln
 Bin/*
-Build/*
+[bB]uild/*
 .vs/*
