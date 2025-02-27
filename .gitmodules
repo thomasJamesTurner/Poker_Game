@@ -1,0 +1,3 @@
+[submodule "lib/Spritter"]
+	path = lib/Spritter
+	url = https://github.com/aquagoose/Spritter

@@ -1,8 +1,10 @@
-*.txt
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
 *.sln
 Bin/*
-Build/*
+[bB]uild/*
 .vs/*
+
+cmake-build-debug/
+.idea/
