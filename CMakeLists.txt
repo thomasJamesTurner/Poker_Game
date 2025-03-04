@@ -16,10 +16,4 @@ add_executable(Poker_Game
 # ---------- Spritter ----------
 add_subdirectory(lib/Spritter)
 target_link_libraries(Poker_Game PUBLIC Spritter)
-
-# TODO: Remove this once Spritter actually works properly
-add_custom_command(
-        TARGET Poker_Game POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3::SDL3-shared> $<TARGET_FILE_DIR:Poker_Game>
-        VERBATIM
-)
+#spritter_set_content(Poker_Game ${CMAKE_SOURCE_DIR}/MyContentDir ${CMAKE_BINARY_DIR}/MyContentDir)
