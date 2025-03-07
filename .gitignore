@@ -3,7 +3,9 @@
 *.vcxproj.user
 *.sln
 Bin/*
+[oO]ut/*
 [bB]uild/*
+
 .vs/*
 
 cmake-build-debug/
