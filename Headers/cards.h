@@ -54,11 +54,11 @@ std::string getCardName(Card card)
 	std::string output;
 	if (card.suit == "hearts" || card.suit == "diamonds")
 	{
-		output = "\033[31;42m" + card.value + " of " + card.suit + "\033[0m";
+		output = "\033[31m" + card.value + " of " + card.suit;
 	}
 	else
 	{
-		output = "\033[30;42m" + card.value + " of " + card.suit + "\033[0m";
+		output = "\033[302m" + card.value + " of " + card.suit;
 	}
 	return output;
 }

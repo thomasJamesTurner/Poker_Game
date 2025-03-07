@@ -1,13 +1,16 @@
 #pragma once
+#include "display.h"
 #include "cards.h"
 #include "events.h"
 #include <cmath>
 #include <iostream>
 #include <string>
+#include <Spritter/Spritter.h>
 
 
 class Player
 {
+	logger* log;
 	std::string playerName;
 	Hand playerHand;
 	float account;
@@ -22,6 +25,7 @@ public:
 
 	Player(Deck* deck, EventDispatcher* dispatch) : deck(deck), account(0.0f), minBet(0.0f), folded(false), allin(false), dispatch(dispatch)
 	{
+		log =logger::getInstance("", "");
 	    if (!dispatch) 
 		{
 	        throw std::invalid_argument("EventDispatcher cannot be null!");
@@ -37,7 +41,8 @@ public:
 	}
 	virtual ~Player()
 	{
-		std::cout << "DELETING PLAYER " << getPlayerName() << std::endl;
+		
+		log->debugMsg("DELETING PLAYER " + getPlayerName());
 		dispatch->removeHandler(handler);
 		delete handler;
 	}
@@ -52,13 +57,13 @@ public:
 		if (winEvent.playerName == playerName)
 		{
 			showAccount();
-			std::cout << "\033[30;42m" << "win amount $" << winEvent.winnings << "\033[0m" << std::endl;
+			log->msg("win amount $" + std::to_string(winEvent.winnings));
 			account += winEvent.winnings;
 			showAccount();
 		}
 		if (this->getPlayerAccount() <= 0)
 		{
-			std::cout<< "Player: "<< getPlayerName()<<" has no money left to play with and will exit" << std::endl;
+			log->msg("Player: " + getPlayerName() + " has no money left to play with and will exit");
 			PlayerExitEvent playerExit(this);
 
 			handler->sendEvent(playerExit);
@@ -90,31 +95,28 @@ public:
 
 	int gameInput()
 	{
-		std::string input;
-		std::cout << "\n\033[37;45m"	<< "[ Player Input ]" << "\033[0m" << std::endl;
-		std::cout <<   "\033[37;45m"	<< "f : fold" << "\033[0m" << std::endl;
-		std::cout <<   "\033[37;45m"	<< "c : check" << "\033[0m" << std::endl;
-		std::cout <<   "\033[37;45m"	<< "l : call" << "\033[0m" << std::endl;
-		std::cout <<   "\033[37;45m"	<< "r : raise" << "\033[0m" << std::endl;
-		std::cout <<   "\033[37;45m"	<< "a : all in" << "\033[0m" << std::endl;
-
-		int result = 0;
-		do
-		{
-			std::cout << "\n\033[30;42m" << getPlayerName() << " action: " << "\033[0m";
-			std::getline(std::cin, input);
-			std::transform(input.begin(), input.end(), input.begin(), ::tolower);
-			if (input == "f" || input =="fold")							{ result = 0; break; }
-			if (input == "c" || input =="check")						{ result = 1; break; }
-			if (input == "l" || input =="call")							{ result = 2; break; }
-			if (input == "r" || input =="raise")						{ result = 3; break; }
-			if (input == "a" || input == "all in" || input =="allin")	{ result = 4; break; }
-			result = -1;
-			std::cout << "\033[30;42m" << "Please Input A Valid Action" << "\033[0m";
-		} while (result == -1);
+		int result = -1;
+			if (Spritter::Input::IsKeyDown(Spritter::Key::F))
+			{
+				return result = 0; 
+			}
+			if (Spritter::Input::IsKeyDown(Spritter::Key::C))
+			{
+				return result = 1;
+			}
+			if (Spritter::Input::IsKeyDown(Spritter::Key::L))
+			{
+				return result = 2;
+			}
+			if (Spritter::Input::IsKeyDown(Spritter::Key::R))
+			{
+				return result = 3;
+			}
+			if (Spritter::Input::IsKeyDown(Spritter::Key::A))
+			{
+				return result = 4;
+			}
 		return result;
-		
-		
 	}
 	void blind()
 	{
@@ -138,14 +140,15 @@ public:
 				try
 				{
 					std::string input;
-					std::cout << "\033[30;42m" << "raise by: " << "\033[0m";
+					log->msg("raise by: ");
 					std::getline(std::cin, input);
 					float bet = std::stof(input);
 					badAction = raise(bet) == -1;
 				}
 				catch (...)
 				{
-					std::cout << "\033[30;42m" << "Please Enter Valid Input" << "\033[0m" << std::endl;
+					
+					log->errorMsg("Please Enter Valid Input");
 					badAction = true;
 				}
 			} while (badAction);
@@ -190,31 +193,35 @@ public:
 		PlayerBetEvent bet(playerName,betAmount);
 		handler->sendEvent(bet);
 		showAccount();
-		std::cout << "\033[30;42m" << "Bet $" << betAmount << "\033[0m" << std::endl;
+		log->msg("Bet $" + std::to_string(betAmount));
 	}
 	void fold()
 	{
 		folded = true;
-		handler->sendEvent(PlayerFoldEvent(this,*(this->getHand())));
-		std::cout << "\033[30;42m" << getPlayerName() <<" folded" << "\033[0m" << std::endl;
+		log->msg(getPlayerName() + " folded");
+		handler->sendEvent(PlayerFoldEvent(this, *(this->getHand())));
+		handler->sendEvent(PlayerEndTurn());
 	}
 	void check()
 	{
 		folded = true;
-		std::cout << "\033[30;42m" << getPlayerName() << " checked" << "\033[0m" << std::endl;
+		log->msg(getPlayerName() + " checked");
 		handler->sendEvent(PlayerCheckEvent(this));
+		handler->sendEvent(PlayerEndTurn());
 	}
 	void call()
 	{
 		makeBet(minBet);
-		std::cout << "\033[30;42m" << getPlayerName() << " called" << "\033[0m" << std::endl;
+		log->msg(getPlayerName() + " called");
 		handler->sendEvent(PlayerCallEvent(this));
+		handler->sendEvent(PlayerEndTurn());
 	}
 	void allIn()
 	{
-		std::cout << "\033[30;42m" << getPlayerName() << " has gone ALL IN" << "\033[0m" << std::endl;
+		log->msg(getPlayerName() + " has gone ALL IN");
 		allin = true;
 		handler->sendEvent(PlayerAllInEvent(this));
+		handler->sendEvent(PlayerEndTurn());
 		makeBet(account);
 	}
 	int raise(float raise)
@@ -241,16 +248,6 @@ public:
 		account = amount;
 	}
 
-	void setPlayerName()
-	{
-		std::cout << "\033[30;42m" << "Input Player Name: " << "\033[0m";
-		std::getline(std::cin, playerName);
-		if (playerName == "")
-		{
-			playerName = rand();
-		}
-	}
-
 
 	void subscribeToEvent(EventType eventType, std::function<void(const Event&)> callback)
 	{
@@ -269,12 +266,12 @@ public:
 
 	inline void showAccount()
 	{
-		std::cout << "\033[30;42m" << playerName <<" Balance $" << account << "\033[0m" << std::endl;
+		log->msg(playerName + " Balance $" + std::to_string(account));
 	}
 
 	inline void showMinBet()
 	{
-		std::cout << "\033[30;42m" <<"Prevoius Bet: " << minBet << "\033[0m" << std::endl;
+		log->msg("Prevoius Bet: " + std::to_string(minBet));
 	}
 
 	inline Hand* getHand()
@@ -294,9 +291,7 @@ public:
 
 	inline EventHandler* getHandler()
 	{
-#ifdef _DEBUG
-		std::cout << "getting " << playerName << " handler" << std::endl;
-#endif
+		log->debugMsg("getting " + playerName + " handler");
 		return handler;
 	}
 
@@ -319,18 +314,21 @@ public:
 
 class UserPlayer : public Player
 {
+	logger* log;
 public:
 	UserPlayer(Deck* deck, EventDispatcher* dispatch) : Player(deck, dispatch)
 	{
-		setPlayerName();
-		std::cout << "\033[30;42m" << "Player Name: " << this->getPlayerName() << "\033[0m" << std::endl;
-		setUserAccountAmount();
+		log = logger::getInstance("", "");
+		setPlayerName("player");
+
+		log->msg("Player Name: " + this->getPlayerName());
+		this->setAccountAmount(100);
 		showAccount();
 	}
 
 	void setUserAccountAmount()
 	{
-		std::cout << "\033[30;42m" << "Input Amount To Play With: " << "\033[0m";
+		log->msg("Input Amount To Play With: ");
 		std::string amount;
 		float amountFloat;
 		try
@@ -355,18 +353,20 @@ public:
 class BotPlayer : public Player
 {
 	std::function<void(BotPlayer*)> playTurnStrategy;
+	logger* log;
 	
 public:
 	std::function<void(BotPlayer*)> initalizerFunction;
 	
 	BotPlayer(Deck* deck, EventDispatcher* dispatch,std::function<void(BotPlayer*)> playTurnStrategy, std::function<void(BotPlayer*)> initalizeFunc): Player(deck,dispatch)
 	{
+		log = logger::getInstance("","");
 		
 		if (playTurnStrategy) {
 			this->playTurnStrategy = playTurnStrategy;
 		}
 		else {
-			std::cerr << "Error: BotPlayer received a null playTurnStrategy!\n";
+			log->errorMsg("Error: BotPlayer received a null playTurnStrategy!");
 		}
 		
 		std::random_device rd;
@@ -379,7 +379,7 @@ public:
 			this->initalizerFunction = initalizeFunc;
 		}
 		else {
-			std::cerr << "Error: BotPlayer received a null playTurnStrategy!\n";
+			log->errorMsg("Error: BotPlayer received a null playTurnStrategy!");
 		}
 	}
 
@@ -417,7 +417,7 @@ public:
 
 		if (bet < this->getMinimumBet() && bet != getPlayerAccount())
 		{
-			std::cout << "\033[30;42m" << "Bet cannot be below the pevious bet" << "\033[0m" << std::endl;
+			log->errorMsg("Bet cannot be below the pevious bet");
 			throw;
 		}
 		this->makeBet(bet);
@@ -437,11 +437,11 @@ public:
 			}
 			catch(...)
 			{
-				std::cout << "\n\033[37;41m" << "Bot strategy for Bot:" << "\033[0m" << " " << this->getPlayerName() << " \033[37;41m" << "Has encounted an error";
+				log->errorMsg("Bot strategy for Bot: " + this->getPlayerName() +" Has encounted an error");
 			}
 		}
 		else {
-			std::cerr << "Error: playTurnStrategy is uninitialized!\n";
+			log->errorMsg("Error: playTurnStrategy is uninitialized!");
 		}
 	}
 };

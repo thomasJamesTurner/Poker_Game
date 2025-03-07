@@ -1,0 +1,372 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						5,
+						9
+					]
+				},
+				{
+					"build" : "lib/Spritter",
+					"childIndexes" : 
+					[
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-lib.Spritter-Release-19d53d8153b2573265a0.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "lib/Spritter",
+					"targetIndexes" : 
+					[
+						11
+					]
+				},
+				{
+					"build" : "lib/Spritter/lib/SDL",
+					"jsonFile" : "directory-lib.Spritter.lib.SDL-Release-c96c200da81212fc2e12.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 2,
+					"source" : "lib/Spritter/lib/SDL",
+					"targetIndexes" : 
+					[
+						6,
+						7,
+						8
+					]
+				},
+				{
+					"build" : "lib/Spritter/lib/freetype",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-lib.Spritter.lib.freetype-Release-20bf03b3cbec585fd6a5.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.0"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 3,
+					"source" : "lib/Spritter/lib/freetype",
+					"targetIndexes" : 
+					[
+						13
+					]
+				},
+				{
+					"build" : "lib/Spritter/lib/glad",
+					"jsonFile" : "directory-lib.Spritter.lib.glad-Release-57cb85e2ce982b906a2e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 4,
+					"source" : "lib/Spritter/lib/glad",
+					"targetIndexes" : 
+					[
+						14
+					]
+				},
+				{
+					"build" : "lib/Spritter/lib/stb",
+					"jsonFile" : "directory-lib.Spritter.lib.stb-Release-e2129d30d3a2ef28c0c7.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 5,
+					"source" : "lib/Spritter/lib/stb",
+					"targetIndexes" : 
+					[
+						15
+					]
+				},
+				{
+					"build" : "lib/Spritter/examples",
+					"jsonFile" : "directory-lib.Spritter.examples-Release-872f8a801a5cb99d95ea.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 6,
+					"source" : "lib/Spritter/examples",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						10,
+						12
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Poker_Game",
+					"targetIndexes" : 
+					[
+						5,
+						9
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						2,
+						3,
+						4,
+						5,
+						6
+					],
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "Spritter",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						11
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "SDL3",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						6,
+						7,
+						8
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "freetype",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						13
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						4
+					],
+					"name" : "glad",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						14
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						5
+					],
+					"name" : "stb",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						15
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						6
+					],
+					"name" : "SpritterExamples",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						10,
+						12
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 6,
+					"id" : "01-ClearScreen::@47f34c8c7e60b5af684c",
+					"jsonFile" : "target-01-ClearScreen-Release-38d6a9ba9a9affb8ce58.json",
+					"name" : "01-ClearScreen",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "02-Sprite::@47f34c8c7e60b5af684c",
+					"jsonFile" : "target-02-Sprite-Release-a035448af6b3ff52c80a.json",
+					"name" : "02-Sprite",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "03-Transforms::@47f34c8c7e60b5af684c",
+					"jsonFile" : "target-03-Transforms-Release-82772d0922277ca09da9.json",
+					"name" : "03-Transforms",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "04-Input::@47f34c8c7e60b5af684c",
+					"jsonFile" : "target-04-Input-Release-4d50305031e0b498bd35.json",
+					"name" : "04-Input",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "05-Text::@47f34c8c7e60b5af684c",
+					"jsonFile" : "target-05-Text-Release-c2216ffae7e5369b53bd.json",
+					"name" : "05-Text",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "Poker_Game::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Poker_Game-Release-87a1a1e40d0d56834b54.json",
+					"name" : "Poker_Game",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SDL3-shared::@e127cc73990f78c67bf8",
+					"jsonFile" : "target-SDL3-shared-Release-b19edc958680a9846260.json",
+					"name" : "SDL3-shared",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SDL3_test::@e127cc73990f78c67bf8",
+					"jsonFile" : "target-SDL3_test-Release-d027d9d13e3ab62b1db9.json",
+					"name" : "SDL3_test",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "SDL_uclibc::@e127cc73990f78c67bf8",
+					"jsonFile" : "target-SDL_uclibc-Release-614b0ce87ec79c286db0.json",
+					"name" : "SDL_uclibc",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "SpContentCopyForPoker_Game::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-SpContentCopyForPoker_Game-Release-55ded6730e4b2c5dd441.json",
+					"name" : "SpContentCopyForPoker_Game",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "SpContentCopyForSpritterExamples::@47f34c8c7e60b5af684c",
+					"jsonFile" : "target-SpContentCopyForSpritterExamples-Release-eed755f89c01042c76ee.json",
+					"name" : "SpContentCopyForSpritterExamples",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "Spritter::@698a8ad09cc59602a982",
+					"jsonFile" : "target-Spritter-Release-907624a6081403b7fd37.json",
+					"name" : "Spritter",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 6,
+					"id" : "SpritterExamples::@47f34c8c7e60b5af684c",
+					"jsonFile" : "target-SpritterExamples-Release-49734421d8fd69196eab.json",
+					"name" : "SpritterExamples",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "freetype::@220498cc1f1117fdf84c",
+					"jsonFile" : "target-freetype-Release-8dd88a65e2527382d0dd.json",
+					"name" : "freetype",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "glad::@8765733fae905c03be65",
+					"jsonFile" : "target-glad-Release-2ad231120c195706de70.json",
+					"name" : "glad",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "stb::@9e3744d459bec5074972",
+					"jsonFile" : "target-stb-Release-d9e45e986ceab2cd200d.json",
+					"name" : "stb",
+					"projectIndex" : 5
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/Thomas/Dev/projects/poker_game/Poker_Game/out/build/x64-Release",
+		"source" : "C:/Users/Thomas/Dev/projects/poker_game/Poker_Game"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

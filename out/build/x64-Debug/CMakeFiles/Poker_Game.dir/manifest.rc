@@ -1,0 +1,2 @@
+#pragma code_page(65001)
+1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ "C:/Users/Thomas/Dev/projects/poker_game/Poker_Game/out/build/x64-Debug/CMakeFiles/Poker_Game.dir/embed.manifest"

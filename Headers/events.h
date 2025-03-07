@@ -9,6 +9,16 @@
 
 class Player;
 
+class PlayerEndTurn final : public Event {
+public:
+    Player* playerEnded;
+    PlayerEndTurn(Player* player = nullptr) : playerEnded(player) {}
+
+    EventType getType() const override {
+        return EventType::PlayerTurnEnd;
+    }
+};
+
 class PlayerBetEvent : public Event {
 public:
     std::string playerName;

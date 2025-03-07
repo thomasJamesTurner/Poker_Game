@@ -1,4 +1,5 @@
 #pragma once
+#include "display.h"
 #include "cards.h"
 #include "player.h"
 #include <map>
@@ -14,12 +15,16 @@ struct HandType
 
 class Table
 {
+	logger* log;
 	Deck deck;
 	float pot = 0.0f;
+	int currentPlayer = 0;
+	int roundCount = 0;
 	std::vector<Card> flop;
 	std::vector<Player*> players;
 	std::vector<Player*> playersInRound;
 	std::vector<Player*> playersToRemove;
+
 	EventHandler* handler;
 	EventDispatcher dispatcher;
 	
@@ -35,17 +40,18 @@ public:
 
 	void removePlayer()
 	{
-#ifdef _DEBUG
-		std::cout	<< "Before removal - Players: " << players.size()
-					<< ", PlayersInRound: " << playersInRound.size()
-					<< ", PlayersToRemove: " << playersToRemove.size() << std::endl;
-#endif
+
+		std::string msg =	("Before removal - Players: " + std::to_string(players.size())) + 
+							(", PlayersInRound: " + std::to_string(playersInRound.size())) + 
+							(", PlayersToRemove: " + std::to_string(playersToRemove.size()));
+		log->debugMsg(msg);
+
 
 		for (auto it = playersToRemove.begin(); it != playersToRemove.end();)
 		{
 			Player* playerToRemove = *it;
 			if (!playerToRemove) {
-				std::cout << "Invalid player detected" << std::endl;
+				log->errorMsg("Invalid player detected");
 				it = playersToRemove.erase(it);
 				continue;
 			}
@@ -62,11 +68,11 @@ public:
 			}
 			it = playersToRemove.erase(it);
 		}
-#ifdef _DEBUG
-		std::cout << "After removal - Players: " << players.size()
-			<< ", PlayersInRound: " << playersInRound.size()
-			<< ", PlayersToRemove: " << playersToRemove.size() << std::endl;
-#endif
+		msg = ("After removal - Players: " + std::to_string(players.size())) +
+			(", PlayersInRound: " + std::to_string(playersInRound.size())) +
+			(", PlayersToRemove: " + std::to_string(playersToRemove.size()));
+		log->msg(msg);
+
 		if (players.size() <= 1) 
 		{
 			gameover = true;
@@ -80,6 +86,14 @@ public:
 
 		playersToRemove.push_back(playerToRemove);
 	}
+
+	void playGame()
+	{
+		currentPlayer = currentPlayer % playersInRound.size();
+		playersInRound[currentPlayer]->playTurn();
+	}
+
+
 
 	void playerFold(const Event& event)
 	{
@@ -101,18 +115,28 @@ public:
 
 	Table()
 	{
+		log = logger::getInstance("white", "blue");
 		handler = new EventHandler(&dispatcher);
 		dispatcher.addHandler(handler);
-		handler->subscribe({ EventType::PlayerBet, std::bind(&Table::addToPot, this, std::placeholders::_1) });
-		handler->subscribe({ EventType::PlayerExit, std::bind(&Table::playerExit, this, std::placeholders::_1) });
-		handler->subscribe({ EventType::PlayerFold, std::bind(&Table::playerFold, this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerBet,		std::bind(&Table::addToPot, this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerExit,		std::bind(&Table::playerExit, this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerFold,		std::bind(&Table::playerFold, this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerTurnEnd,	std::bind(&Table::nextPlayer,this,std::placeholders::_1) });
+
 
 		deck.makeDeck();
 		deck.shuffleDeck();
 	}
 
 	
-
+	void nextPlayer(const Event& event)
+	{
+		currentPlayer++;
+		if (currentPlayer >= playersInRound.size())
+		{
+			currentPlayer = 0;
+		}
+	}
 	
 
 	void addPlayer(std::function<void(BotPlayer*)> playTurnStrategy = nullptr, std::function<void(BotPlayer*)> initalizeBot = nullptr)
@@ -147,17 +171,16 @@ public:
 
 	void printPlayers(std::vector<Player*> players)
 	{
-		tableMsg("[ PLAYERS ]");
+		log->msg("[ PLAYERS ]");
 		for (Player* player : players)
 		{
-			tableMsg(player->getPlayerName());
+			log->msg(player->getPlayerName());
 		}
 	}
 
 	void playRound()
 	{
 		deck.makeDeck();
-		std::cout<<"\n" << std::endl;
 		deck.shuffleDeck();
 		pot = 0;
 		flop.clear();
@@ -168,36 +191,30 @@ public:
 		dispatcher.printHandlers();
 #endif
 
-		for(int i = 0; i<4;i++)
+		printPlayers(playersInRound);
+		switch (currentPlayer)
 		{
-			
-			std::cout << "\n\n" << std::endl;
-			printPlayers(playersInRound);
-			std::cout << "\n" << std::endl;
-			switch (i)
-			{
-			case(1):
-				addCardsToTable(3);
-				break;
-			case(2):
-				addCardsToTable(1);
-				break;
-			case(3):
-				addCardsToTable(1);
-				break;
-			}
-			printTable();
-			for (Player* player : playersInRound)
-			{
-				player->playTurn();
-			}
-			std::cout << "Players: " << players.size() << ", PlayersInRound: " << playersInRound.size() << std::endl;
-			if (playersInRound.size() <= 1)
-			{
-				break;
-			}
-			removePlayer();
+		case(1):
+			addCardsToTable(3);
+			break;
+		case(2):
+			addCardsToTable(1);
+			break;
+		case(3):
+			addCardsToTable(1);
+			break;
 		}
+		printTable();
+		for (Player* player : playersInRound)
+		{
+			player->playTurn();
+		}
+		log->debugMsg("Players: " + std::to_string(players.size()) + ", PlayersInRound: " + std::to_string(playersInRound.size()));
+		if (playersInRound.size() <= 1)
+		{
+			return;
+		}
+		removePlayer();
 		roundLeaderboard();
 		removePlayer();
 	}
@@ -223,19 +240,14 @@ public:
 	{
 		for (Card card : flop)
 		{
-			std::cout << getCardName(card) << std::endl;
+			log->msg(getCardName(card));
 		}
 		sortPlayers();
 		printPlayerHands();
 
-		tableMsg("### Winner ###\n" + playersInRound[0]->getPlayerName());
+		log->msg("### Winner ###\n" + playersInRound[0]->getPlayerName());
 		PlayerWinEvent win(pot,(playersInRound[0]->getPlayerName()));
 		handler->sendEvent(win);
-	}
-
-	void tableMsg(std::string msg)
-	{
-		std::cout << "\033[30;42m" << msg << std::endl;
 	}
 
 	void addCardsToTable(int numOfCards)
@@ -398,7 +410,6 @@ public:
 		{
 			
 			Card currentCard = hand.cards[i];
-			//std::cout << "last card: " << getCardName(lastCard) << "\tcurrent card: " << getCardName(currentCard) <<std::endl;
 			if (currentCard.suit == lastCard.suit)
 			{
 
@@ -554,7 +565,7 @@ public:
 		}
 		else
 		{
-			tableMsg("High Card");
+			log->msg("High Card");
 			sortCardsByRank(hand.cards);
 			val = getRankValue(hand.cards[hand.cards.size() - 1].value) + 1;
 			return{val,hand.cards[hand.cards.size() - 1].value};
@@ -574,7 +585,7 @@ public:
 		}
 		if (pairs > 0)
 		{
-			tableMsg(std::to_string(pairs) + " Pair");
+			log->msg(std::to_string(pairs) + " Pair");
 			return {pairs * 100 + val, cardString };
 		}
 	}
@@ -588,25 +599,25 @@ public:
 			switch (handVal)
 			{
 			case(1000):
-				tableMsg("Royal Flush");
+				log->msg("Royal Flush");
 				break;
 			case(900):
-				tableMsg("Straight Flush");
+				log->msg("Straight Flush");
 				break;
 			case(800):
-				tableMsg("Four Of A Kind");
+				log->msg("Four Of A Kind");
 				break;
 			case(700):
-				tableMsg("Full House");
+				log->msg("Full House");
 				break;
 			case(600):
-				tableMsg("flush");
+				log->msg("flush");
 				break;
 			case(500):
-				tableMsg("straight");
+				log->msg("straight");
 				break;
 			case(400):
-				tableMsg("Three of a kind");
+				log->msg("Three of a kind");
 				break;
 			}
 			if (handVal > 300)
@@ -616,11 +627,11 @@ public:
 			HandType handType = checkPairs(*(player->getHand()));
 			if (handType.handVlaue > 200 && handType.handVlaue < 300)
 			{
-				tableMsg("2 pair" + handType.cardString);
+				log->msg("2 pair" + handType.cardString);
 			}
 			if (handType.handVlaue> 100 && handType.handVlaue < 200)
 			{
-				tableMsg("1 pair" + handType.cardString);
+				log->msg("1 pair" + handType.cardString);
 			}
 		}
 	}

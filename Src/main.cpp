@@ -86,16 +86,44 @@ static void cardCounter(BotPlayer* bot)
 
 using namespace Spritter;
 using namespace Spritter::Math;
+using namespace Spritter::Graphics;
 
 class PokerGame : public Game
 {
-	void Initialize() override { }
+	Table table;
+	std::unique_ptr<SpriteRenderer> _renderer;
+	std::unique_ptr<Texture> _sprite;
+	void Initialize() override 
+	{ 
+		_renderer = std::make_unique<SpriteRenderer>(*GraphicsDevice);
 
-	void Update(const float dt) override { }
+		_sprite = GraphicsDevice->CreateTexture("Content/small_hands.jpg");
+
+		table.addPlayer();
+		table.addPlayer(randomStrategy);
+		table.addPlayer(assertDominance, assertDominanceInit);
+		table.addPlayer(randomStrategy);
+
+	}
+
+	void Update(const float dt) override 
+	{
+		if (!table.gameover)
+		{
+			table.playRound();
+		}
+		else
+		{
+			return;
+		}
+		
+	}
 
 	void Draw() override
 	{
 		GraphicsDevice->Clear(Color::CornflowerBlue());
+		_renderer->Draw(_sprite.get(), Vector2f::Zero());
+		_renderer->Render();
 	}
 };
 
@@ -104,21 +132,11 @@ int main()
 	GameOptions options
 	{
 		/* Name: */ "Poker Game",
-		/* Size: */ { 1280, 720 }
+		/* Size: */ { 1280, 720 },
+		/* Resizable: */ true,
 	};
 	PokerGame game;
 	game.Run(options);
 
-	//setBackgroundColour(42);
-	
-	Table table;
-	table.addPlayer();
-	table.addPlayer(randomStrategy);
-	table.addPlayer(assertDominance,assertDominanceInit);
-	table.addPlayer(randomStrategy);
-	//table.addPlayer(cardCounter,cardCounterInit);
-	while(!table.gameover)
-	{
-		table.playRound();
-	}
+	return 0;
 }

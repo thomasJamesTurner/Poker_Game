@@ -1,33 +1,28 @@
 #pragma once
-
+#include "display.h"
 #include <vector>
 #include <unordered_map>
 #include <functional>
+#include <iostream>
+#include "event_types.h"
 
 // Forward declare EventHandler (so EventDispatcher knows it exists)
 class EventHandler;
 
-enum class EventType
-{
-    PlayerBet,
-    PlayerWin,
-    RoundStart,
-    RoundEnd,
-    PlayerExit,
-    PlayerFold,
-    PlayerAllIn,
-    PlayerCall,
-    PlayerCheck,
-    PlayerRaise
-};
+
 
 class Event {
+
 public:
+    
+    Event() = default;
     virtual ~Event() = default;
     virtual EventType getType() const = 0;
     void printEvent () const
     {
-        std::cout << "Event dispatched: " << typeid(*this).name() << std::endl;
+        logger* log = logger::getInstance("", "");
+        log = logger::getInstance("", "");
+        
     }
 };
 
@@ -60,7 +55,11 @@ private:
 
 public:
     EventHandler(EventDispatcher* dispatch) : dispatcher(dispatch) {}
-    ~EventHandler() { std::cout << "deleting event handler" << std::endl; }
+    ~EventHandler() 
+    { 
+        logger* log = logger::getInstance("", "");
+        log->debugMsg("deleting event handler");
+    }
     void called(const Event& event);
     void sendEvent(const Event& event);
     void subscribe(const Listener& listener);
@@ -94,7 +93,8 @@ inline void EventDispatcher::dispatch(const Event& event)
 
 inline void EventDispatcher::printHandlers()
 {
-    std::cout<<"Number Of Handlers In Dispatcher: "<<eventHandlers.size()<<std::endl;
+    logger* log = logger::getInstance("", "");
+    log->debugMsg("Number Of Handlers In Dispatcher: " + std::to_string(eventHandlers.size()));
 }
 
 inline void EventHandler::called(const Event& event)
@@ -116,7 +116,8 @@ inline void EventHandler::sendEvent(const Event& event)
     }
     else
     {
-        std::cout << "Dispatcher Was Null Pointer" << std::endl;
+        logger* log = logger::getInstance("", "");
+        log->errorMsg("Dispatcher Was Null Pointer");
     }
 }
 
