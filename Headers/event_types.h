@@ -10,5 +10,6 @@ enum class EventType
     PlayerCall,
     PlayerCheck,
     PlayerRaise,
-    PlayerTurnEnd
+    PlayerTurnEnd,
+    gameOver
 };

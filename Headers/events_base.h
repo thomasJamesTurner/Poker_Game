@@ -21,7 +21,7 @@ public:
     void printEvent () const
     {
         logger* log = logger::getInstance("", "");
-        log = logger::getInstance("", "");
+        log->debugMsg("Event: " + std::string(typeid(*this).name()));
         
     }
 };
@@ -57,6 +57,7 @@ public:
     EventHandler(EventDispatcher* dispatch) : dispatcher(dispatch) {}
     ~EventHandler() 
     { 
+        dispatcher->removeHandler(this);
         logger* log = logger::getInstance("", "");
         log->debugMsg("deleting event handler");
     }

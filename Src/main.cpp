@@ -13,7 +13,7 @@ static void randomStrategy(BotPlayer* bot)
 			bot->fold();
 			return;
 		}
-		bot->blind(betAmount);
+		bot->raise(betAmount);
 	}
 	else {
 		bot->fold();
@@ -103,16 +103,17 @@ class PokerGame : public Game
 		table.addPlayer(randomStrategy);
 		table.addPlayer(assertDominance, assertDominanceInit);
 		table.addPlayer(randomStrategy);
+		//table.startGame();
 
 	}
 
 	void Update(const float dt) override 
 	{
-		if (!table.gameover)
+		//if (!table.gameover)
 		{
-			table.playRound();
+			table.playGame();
 		}
-		else
+		//else
 		{
 			return;
 		}
@@ -132,7 +133,7 @@ int main()
 	GameOptions options
 	{
 		/* Name: */ "Poker Game",
-		/* Size: */ { 1280, 720 },
+		/* Size: */ { 1280, 800 },
 		/* Resizable: */ true,
 	};
 	PokerGame game;

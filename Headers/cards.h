@@ -78,6 +78,7 @@ public:
 		catch(...)
 		{ 
 			std::cout << "couldnt draw card: deck depleated" << std::endl;
+			return {"unknown","unknown"};
 		}
 		
 	}

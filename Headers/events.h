@@ -77,6 +77,19 @@ public:
         return EventType::RoundStart;
     }
 };
+class RoundEndEvent : public Event {
+public:
+    EventType getType() const override {
+        return EventType::RoundEnd;
+    }
+};
+
+class GameOverEvent : public Event {
+public:
+    EventType getType() const override {
+        return EventType::gameOver;
+    }
+};
 
 class PlayerAllInEvent : public Event {
 public:
