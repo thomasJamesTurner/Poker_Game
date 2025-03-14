@@ -103,7 +103,7 @@ class PokerGame : public Game
 		table.addPlayer(randomStrategy);
 		table.addPlayer(assertDominance, assertDominanceInit);
 		table.addPlayer(randomStrategy);
-		//table.startGame();
+		table.startGame();
 
 	}
 

@@ -53,8 +53,54 @@ private:
 			currentPlayer = 0;
 		}
 	}
+	void roundLeaderboard(const Event& event)
+	{
+
+		for (Card card : flop)
+		{
+			log->msg(getCardName(card));
+		}
+		if (playersInRound.size() == 1)
+		{
+			log->msg("### Winner ###\n" + playersInRound[0]->getPlayerName());
+			PlayerWinEvent win(pot, (playersInRound[0]->getPlayerName()));
+			handler->sendEvent(win);
+			return;
+		}
+		sortPlayers();
+		printPlayerHands();
+
+		log->msg("### Winner ###\n" + playersInRound[0]->getPlayerName());
+		PlayerWinEvent win(pot, (playersInRound[0]->getPlayerName()));
+		handler->sendEvent(win);
+		if (players.size() <= 1)
+		{
+			GameOverEvent game;
+			handler->sendEvent(game);
+			return;
+		}
+		startGame(10.0f, 20.0f, playersInRound[getNextPlayer()], playersInRound[getNextPlayer() + 1], &deck);
+	}
 
 public:
+
+	Table()
+	{
+		log = logger::getInstance("black", "green");
+		handler = new EventHandler(&dispatcher);
+		dispatcher.addHandler(handler);
+
+		handler->subscribe({ EventType::PlayerBet,		std::bind(&Table::addToPot,			this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerFold,		std::bind(&Table::playerFold,		this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerTurnEnd,	std::bind(&Table::nextPlayer,		this, std::placeholders::_1) });
+		handler->subscribe({ EventType::RoundEnd,		std::bind(&Table::roundLeaderboard, this, std::placeholders::_1) });
+
+		deck.makeDeck();
+		deck.printDeck();
+		deck.shuffleDeck();
+		
+	}
+
 
 	void playGame()
 	{
@@ -71,6 +117,9 @@ public:
 
 	void startGame(float smallBlind = 10.0f, float bigblind = 20.0f, Player* smallblindPlayer = nullptr, Player* bigblindPlayer = nullptr, Deck* tableDeck = nullptr)
 	{
+		deck.makeDeck();
+		deck.shuffleDeck();
+
 		playersInRound = players;				//players used for stuff for the overall round, players in round used for play by play
 		if (smallblindPlayer == nullptr)
 		{
@@ -106,34 +155,7 @@ public:
 		);
 	}
 	 
-	void roundLeaderboard(const Event& event)
-	{
-
-		for (Card card : flop)
-		{
-			log->msg(getCardName(card));
-		}
-		if (playersInRound.size() == 1)
-		{
-			log->msg("### Winner ###\n" + playersInRound[0]->getPlayerName());
-			PlayerWinEvent win(pot, (playersInRound[0]->getPlayerName()));
-			handler->sendEvent(win);
-			return;
-		}
-		sortPlayers();
-		printPlayerHands();
-
-		log->msg("### Winner ###\n" + playersInRound[0]->getPlayerName());
-		PlayerWinEvent win(pot, (playersInRound[0]->getPlayerName()));
-		handler->sendEvent(win);
-		if (players.size() <= 1)
-		{
-			GameOverEvent game;
-			handler->sendEvent(game);
-			return;
-		}
-		startGame(10.0f, 20.0f, playersInRound[getNextPlayer()], playersInRound[getNextPlayer() + 1], &deck);
-	}
+	
 
 	void removePlayer()
 	{
@@ -194,6 +216,7 @@ public:
 		}
 		else
 		{
+
 			player = new User(&deck, &dispatcher);
 
 		}

@@ -65,6 +65,7 @@ public:
 	{
 		log = logger::getInstance("", "");
 		handler = new EventHandler(dispatch);
+		this->deck = deck;
 		handler->subscribe({EventType::PlayerBet,std::bind(&Player::updateMinBet,this,std::placeholders::_1)});
 		handler->subscribe({EventType::PlayerWin, std::bind(&Player::updateAccount, this, std::placeholders::_1)});
 		handler->subscribe({ EventType::RoundStart, std::bind(&Player::startGame, this, std::placeholders::_1) });

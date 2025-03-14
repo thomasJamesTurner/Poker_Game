@@ -1,4 +1,5 @@
 #pragma once
+#include"display.h"
 #include<iostream>
 #include<vector>
 #include<algorithm>
@@ -102,9 +103,10 @@ public:
 
 	void printDeck()
 	{
+		logger* log = logger::getInstance("", "");
 		for (Card card : cards)
 		{
-			std::cout << getCardName(card) << std::endl;
+			log->msg(getCardName(card));
 		}
 	}
 
@@ -123,20 +125,20 @@ public:
 
 	void showCards()
 	{
-		std::cout << "\n";
+		logger* log = logger::getInstance("", "");
 		for (Card card : cards)
 		{
-			std::cout << getCardName(card) << std::endl;
+			log->msg(getCardName(card));
 		}
 	}
 
 	void makeHand(Deck* deck,int numOfCards)
 	{
 		cards.clear();
-
 		for (int i = 0; i < numOfCards;i++)
 		{
-			addCardToHand(deck->drawCard());
+			Card card = deck->drawCard();
+			addCardToHand(card);
 		}
 	}
 
