@@ -22,6 +22,12 @@ protected:
 	EventHandler* handler;
 	logger* log;
 	Deck* deck;
+
+	/*
+	*		EVENT FUNCTIONS
+	*	GETS CALLED ON RESPECTIVE
+	*			EVENTS
+	*/
 	void updateMinBet(const Event& event)
 	{
 		const PlayerBetEvent playerBet = static_cast<const PlayerBetEvent&>(event);
@@ -54,15 +60,13 @@ protected:
 public:
 
 
-	/*
-	*		EVENT FUNCTIONS
-	*	GETS CALLED ON RESPECTIVE 
-	*			EVENTS
-	*/
+	
 	
 
 	Player(Deck* deck, EventDispatcher* dispatch)
 	{
+		account = 0.0f;
+		minBet  = 0.0f;
 		log = logger::getInstance("", "");
 		handler = new EventHandler(dispatch);
 		this->deck = deck;
@@ -127,8 +131,9 @@ public:
 
 	void makeBet(float bet)
 	{
-
+		bet = int(bet*100) / 100;
 		account -= bet;
+		log->msg("Player " + playerName + " bet $" + std::to_string(bet));
 		PlayerBetEvent playerBet(playerName, bet);
 		handler->sendEvent(playerBet);
 	}
@@ -166,14 +171,35 @@ public:
 		handler->sendEvent(PlayerEndTurn());
 		makeBet(account);
 	}
+
+	virtual void playTurn()
+	{
+		return;
+	}
 };
 
 class User : public Player
 {
+	void startPlayerTurn(const Event& event)
+	{
+		const PlayerStartTurn& startTurn = static_cast<const PlayerStartTurn&>(event);
+		if (startTurn.playerStarting->getPlayerName() == playerName)
+		{
+			showCards();
+			std::string msg = "[  COMMANDS  ]\n\
+								fold:	f\n\
+								call:	l\n\
+								check:	c\n\
+								raise:	r\n\
+								all in:	a";
+			log->msgColour(log->getAnsiTextColourCode("white"), log->getAnsiBackgroundColourCode("magenta"), msg);
+		}
+	}
 public:
 	User(Deck* deck, EventDispatcher* dispatch) : Player(deck,dispatch)
 	{
 		setPlayerName("player");
+		handler->subscribe({ EventType::PlayerTurnStart,std::bind(&User::startPlayerTurn,this,std::placeholders::_1) });
 	}
 
 
@@ -208,7 +234,7 @@ public:
 		return result;
 	}
 
-	void playTurn()
+	void playTurn() override
 	{
 		gameInput();
 	}
@@ -239,5 +265,10 @@ public:
 	void subscribeToEvent(EventType eventType, std::function<void(const Event&)> callback)
 	{
 		handler->subscribe({ eventType, callback });
+	}
+
+	void playTurn() override
+	{
+		playTurnStrategy(this);
 	}
 };

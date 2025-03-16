@@ -19,8 +19,9 @@ private:
 	EventDispatcher dispatcher;
 	logger* log;
 	Deck deck;
-	float pot;
+	float pot = 0.0f;
 	int currentPlayer = 0;
+	int roundcounter = 0;
 	std::vector<Card> flop;
 	std::vector<Player*> players;
 	std::vector<Player*> playersInRound;
@@ -52,6 +53,10 @@ private:
 		{
 			currentPlayer = 0;
 		}
+		PlayerStartTurn startTurn(playersInRound[currentPlayer]);
+		log->msg("Next Players turn: " + playersInRound[currentPlayer]->getPlayerName());
+		handler->sendEvent(startTurn);
+		
 	}
 	void roundLeaderboard(const Event& event)
 	{
@@ -79,9 +84,41 @@ private:
 			handler->sendEvent(game);
 			return;
 		}
-		startGame(10.0f, 20.0f, playersInRound[getNextPlayer()], playersInRound[getNextPlayer() + 1], &deck);
+		
+		removePlayer();
+		log->msg("Player " + playersInRound[getNextPlayer()]->getPlayerName());
+		log->msg("Player " + playersInRound[getNextPlayer(1)]->getPlayerName());
+		startGame(10.0f, 20.0f, playersInRound[getNextPlayer()], playersInRound[getNextPlayer(1)], &deck);
 	}
+	void startRound(const Event& event)
+	{
+		if (roundcounter == 4)
+		{
+			RoundEndEvent endRound;
+			handler->sendEvent(endRound);
+			return;
+		}
+		switch (roundcounter)
+		{
+		case(1):
+			addCardsToTable(3);
+			break;
+		case(2):
+			addCardsToTable(1);
+			break;
+		case(3):
+			addCardsToTable(1);
+			break;
+		}
+		roundcounter++;
+	}
+	void playerExit(const Event& event)
+	{
+		const PlayerExitEvent& exitEvent = static_cast<const PlayerExitEvent&>(event);
+		Player* playerToRemove = exitEvent.player;
 
+		playersToRemove.push_back(playerToRemove);
+	}
 public:
 
 	Table()
@@ -94,9 +131,9 @@ public:
 		handler->subscribe({ EventType::PlayerFold,		std::bind(&Table::playerFold,		this, std::placeholders::_1) });
 		handler->subscribe({ EventType::PlayerTurnEnd,	std::bind(&Table::nextPlayer,		this, std::placeholders::_1) });
 		handler->subscribe({ EventType::RoundEnd,		std::bind(&Table::roundLeaderboard, this, std::placeholders::_1) });
+		handler->subscribe({ EventType::RoundStart,		std::bind(&Table::startRound, this, std::placeholders::_1) });
 
 		deck.makeDeck();
-		deck.printDeck();
 		deck.shuffleDeck();
 		
 	}
@@ -104,19 +141,28 @@ public:
 
 	void playGame()
 	{
-		return;
+		playersInRound[currentPlayer]->playTurn();
 	}
 
-	int getNextPlayer()
+	int getNextPlayer(int offset = 0)
 	{
-		if (currentPlayer == playersInRound.size() - 1) {
-			return 0;
+		int nextPlayer;
+		if (currentPlayer + offset >= playersInRound.size() - 1) {
+
+			nextPlayer = currentPlayer + offset - playersInRound.size() - 1;
 		}
-		return currentPlayer + 1;
+		else
+		{
+			nextPlayer = currentPlayer + 1 + offset;
+		}
+
+		return nextPlayer;
 	}
 
 	void startGame(float smallBlind = 10.0f, float bigblind = 20.0f, Player* smallblindPlayer = nullptr, Player* bigblindPlayer = nullptr, Deck* tableDeck = nullptr)
 	{
+		
+		roundcounter = 0;
 		deck.makeDeck();
 		deck.shuffleDeck();
 
@@ -125,17 +171,20 @@ public:
 		{
 			smallblindPlayer = playersInRound[getNextPlayer()];
 		}
-		if (smallblindPlayer == nullptr)
+		if (bigblindPlayer == nullptr)
 		{
-			bigblindPlayer = playersInRound[getNextPlayer() + 1];
+			bigblindPlayer = playersInRound[getNextPlayer(1)];
 		}
 		if (tableDeck == nullptr)
 		{
 			tableDeck = &deck;
 		}
-
+		log->msg("Big Blind Player: " + bigblindPlayer->getPlayerName());
+		Player* startingPlayer = playersInRound[getNextPlayer(2)];
+		PlayerStartTurn startEvent(startingPlayer);
 		RoundStartEvent start_trigger(smallBlind, bigblind, smallblindPlayer, bigblindPlayer, tableDeck);
 		handler->sendEvent(start_trigger);
+		handler->sendEvent(startEvent);
 	}
 
 	void sortPlayers()
@@ -155,8 +204,6 @@ public:
 		);
 	}
 	 
-	
-
 	void removePlayer()
 	{
 
@@ -176,12 +223,13 @@ public:
 			}
 
 			auto playerIt = std::find(players.begin(), players.end(), playerToRemove);
-			auto roundIt = std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
+			auto roundIt =  std::find(playersInRound.begin(), playersInRound.end(), playerToRemove);
 
 			if (playerIt != players.end()) {
 				players.erase(playerIt);
 				delete playerToRemove;
 			}
+
 			if (roundIt != playersInRound.end()) {
 				playersInRound.erase(roundIt);
 			}
@@ -212,6 +260,7 @@ public:
 
 			botPlayer->initalizerFunction(botPlayer);
 			player = botPlayer;
+			log->debugMsg("Bot player added: " + botPlayer->getPlayerName());
 
 		}
 		else
@@ -222,6 +271,7 @@ public:
 		}
 		dispatcher.addHandler(player->getHandler());
 		players.push_back(player);
+		playersInRound.push_back(player);
 	}
 
 	Deck* getDeck()
@@ -237,6 +287,16 @@ public:
 	void addCardToTable(Card card)
 	{
 		flop.push_back(card);
+	}
+
+
+	void addCardsToTable(int numOfCards)
+	{
+		for (int i = 0; i < numOfCards; i++)
+		{
+			Card card = deck.drawCard();
+			flop.push_back(card);
+		}
 	}
 
 	bool compareCardsRank(const Card& a, const Card& b)

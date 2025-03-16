@@ -9,7 +9,17 @@
 
 class Player;
 
-class PlayerEndTurn final : public Event {
+
+class PlayerStartTurn : public Event {
+public:
+    Player* playerStarting;
+    PlayerStartTurn(Player* player = nullptr) : playerStarting(player) {}
+
+    EventType getType() const override {
+        return EventType::PlayerTurnStart;
+    }
+};
+class PlayerEndTurn : public Event {
 public:
     Player* playerEnded;
     PlayerEndTurn(Player* player = nullptr) : playerEnded(player) {}

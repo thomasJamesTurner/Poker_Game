@@ -103,20 +103,16 @@ class PokerGame : public Game
 		table.addPlayer(randomStrategy);
 		table.addPlayer(assertDominance, assertDominanceInit);
 		table.addPlayer(randomStrategy);
+		
+		
 		table.startGame();
 
 	}
 
 	void Update(const float dt) override 
 	{
-		//if (!table.gameover)
-		{
-			table.playGame();
-		}
-		//else
-		{
-			return;
-		}
+	
+		table.playGame();
 		
 	}
 
