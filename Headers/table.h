@@ -48,11 +48,17 @@ private:
 	}
 	void nextPlayer(const Event& event)
 	{
-		currentPlayer++;
-		if (currentPlayer >= playersInRound.size())
+		if (playersInRound.size() <= 2)
 		{
-			currentPlayer = 0;
+			RoundEndEvent roundEnd;
+			handler->sendEvent(roundEnd);
+			return;
 		}
+		for (Card card : flop)
+		{
+			log->msg(getCardName(card));
+		}
+		currentPlayer = getNextPlayer();
 		PlayerStartTurn startTurn(playersInRound[currentPlayer]);
 		log->msg("Next Players turn: " + playersInRound[currentPlayer]->getPlayerName());
 		handler->sendEvent(startTurn);
@@ -138,6 +144,10 @@ public:
 		
 	}
 
+	void addDisplay()
+	{
+
+	}
 
 	void playGame()
 	{
@@ -149,13 +159,12 @@ public:
 		int nextPlayer;
 		if (currentPlayer + offset >= playersInRound.size() - 1) {
 
-			nextPlayer = currentPlayer + offset - playersInRound.size() - 1;
+			nextPlayer = 0;
 		}
 		else
 		{
 			nextPlayer = currentPlayer + 1 + offset;
 		}
-
 		return nextPlayer;
 	}
 
@@ -167,6 +176,7 @@ public:
 		deck.shuffleDeck();
 
 		playersInRound = players;				//players used for stuff for the overall round, players in round used for play by play
+		printPlayers(playersInRound);
 		if (smallblindPlayer == nullptr)
 		{
 			smallblindPlayer = playersInRound[getNextPlayer()];
@@ -180,7 +190,8 @@ public:
 			tableDeck = &deck;
 		}
 		log->msg("Big Blind Player: " + bigblindPlayer->getPlayerName());
-		Player* startingPlayer = playersInRound[getNextPlayer(2)];
+		currentPlayer = getNextPlayer(2);
+		Player* startingPlayer = playersInRound[currentPlayer];
 		PlayerStartTurn startEvent(startingPlayer);
 		RoundStartEvent start_trigger(smallBlind, bigblind, smallblindPlayer, bigblindPlayer, tableDeck);
 		handler->sendEvent(start_trigger);
@@ -211,6 +222,7 @@ public:
 			(", PlayersInRound: " + std::to_string(playersInRound.size())) +
 			(", PlayersToRemove: " + std::to_string(playersToRemove.size()));
 		log->debugMsg(msg);
+		printPlayers(playersInRound);
 
 
 		for (auto it = playersToRemove.begin(); it != playersToRemove.end();)
@@ -269,9 +281,30 @@ public:
 			player = new User(&deck, &dispatcher);
 
 		}
+		if (player->getPlayerName() == "")
+		{
+			log->errorMsg("player name not initalised, this may cause issue");
+			std::random_device rd;
+			std::default_random_engine rng(rd());
+			std::uniform_int_distribution<int> dist(1, 1000);
+			player->setPlayerName("Player_" + std::to_string(dist(rng)));
+			log->msgColour("white", "cyan", "random assigned player name: " + player->getPlayerName());
+		}
 		dispatcher.addHandler(player->getHandler());
 		players.push_back(player);
 		playersInRound.push_back(player);
+	}
+
+	void printPlayers(std::vector<Player*> players)
+	{
+		std::string msg;
+		log->msgColour("white","magenta","[ PLAYERS ]");
+		for (Player* player : players)
+		{
+			msg += (player->getPlayerName() + "\n");
+		}
+		log->msg(msg);
+
 	}
 
 	Deck* getDeck()

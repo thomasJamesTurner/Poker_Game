@@ -1,10 +1,13 @@
 #pragma once
 #include <iostream>
+#include <queue>
 #include <mutex>
 #include <Spritter/Spritter.h>
 
 
-
+using namespace Spritter;
+using namespace Spritter::Graphics;
+using namespace Spritter::Math;
 
 class logger
 {
@@ -13,16 +16,18 @@ class logger
         there should only ever be a single logger
                      per application
     */
+    
 private:
     logger(std::string textColour,std::string backgroundColour)
     {
-        this->textColour = getAnsiTextColourCode(textColour);
-        this->backgroundColour = getAnsiBackgroundColourCode(backgroundColour);
+        this->txtColour = getAnsiTextColourCode(textColour);
+        this->bgColour = getAnsiBackgroundColourCode(backgroundColour);
     }
     static logger* logger_;
     static std::mutex mutex_;
-    std::string textColour;
-    std::string backgroundColour;
+    std::string txtColour;
+    std::string bgColour;
+    std::deque<std::string> msgList;
 public:
     //stops cloning
     logger(const logger&) = delete;
@@ -30,7 +35,6 @@ public:
     logger& operator =(const logger&) = delete;
 
     static logger* getInstance(std::string textColour, std::string backgroundColour);       //defined outside of class to prevent two instance threads accessing it at the same time
-
 
     std::string getAnsiTextColourCode(const std::string& colour) {
         static const std::unordered_map<std::string, std::string> colorMap = {
@@ -75,31 +79,79 @@ public:
             return "0";
         }
     }
+#ifndef SPRITTER
 
     void msg(std::string msg)
     {
-        std::cout << "\33[" + textColour + ";" << backgroundColour  << msg << std::endl;
+        std::cout << "\33[" + txtColour + ";" + bgColour  << msg << std::endl;
     }
 
-    void msgColour(std::string textcolour, std::string backgroundColour, std::string msg)
+    void msgColour(std::string textColour, std::string backgroundColour, std::string msg)
     {
-        std::cout << "\33[" + getAnsiTextColourCode(textcolour) + ";" << getAnsiBackgroundColourCode(backgroundColour) << msg << "\033[0m" << std::endl;
+        std::cout << "\33[" + getAnsiTextColourCode(textColour) + ";" + getAnsiBackgroundColourCode(backgroundColour) << msg << "\33[" + txtColour + ";" + bgColour << std::endl;
     }
 
     void errorMsg(std::string msg)
     {
-        std::cout << "\33[37;41m" << msg << "\33[" + textColour + ";" << backgroundColour  << std::endl;
+        std::cout << "\33[37;41m" << msg << "\33[" + txtColour + ";" + bgColour  << std::endl;
     }
 
 #ifdef _DEBUG
     void debugMsg(std::string msg)
     {
-        std::cout << "\033[0m \n" << msg << "\33[" + textColour + ";" << backgroundColour << std::endl;
+        std::cout << "\033[0m \n" << msg << "\33[" + txtColour + ";" + bgColour << std::endl;
     }
 #else
     void debugMsg(std::string msg)
     {
         return;
+    }
+#endif
+
+#else
+    void msg(std::string msg)
+    {
+        msgList.push_back(msg);
+    }
+    void msgColour(std::string textColour, std::string backgroundColour, std::string message)
+    {
+        msg(message);
+    }
+    void errorMsg(std::string message)
+    {
+        msg(message);
+    }
+    
+#ifdef _DEBUG
+    void debugMsg(std::string message)
+    {
+        msg(message);
+    }
+#else
+    void debugMsg(std::string msg)
+    {
+        return;
+    }
+#endif
+
+    std::string msgListCombine()
+    {
+        std::string msgs = "";
+        for (int i = 0;i< msgList.size();i++)
+        {
+            msgs += msgList[i];
+        }
+        return msgs;
+    }
+    void draw(SpriteRenderer & renderer, Font & _font)
+    {
+        int fontsize = 10;
+        int count = 1;
+        for (std::string msg : msgList)
+        {
+            _font.Draw(renderer, { 50, fontsize * count }, msg, fontsize, Color::Red());
+        }
+        
     }
 #endif
 };

@@ -1,6 +1,7 @@
 #include "../headers/cards.h"
 #include "../headers/table.h"
 #include "../headers/player.h"
+#include "../Headers/display.h"
 #include <Spritter/Spritter.h>
 
 static void randomStrategy(BotPlayer* bot)
@@ -92,13 +93,15 @@ class PokerGame : public Game
 {
 	Table table;
 	std::unique_ptr<SpriteRenderer> _renderer;
-	std::unique_ptr<Texture> _sprite;
+	//std::unique_ptr<Texture> _sprite;
+	std::unique_ptr<Font> _font;
+
+	logger* log;
 	void Initialize() override 
 	{ 
 		_renderer = std::make_unique<SpriteRenderer>(*GraphicsDevice);
-
-		_sprite = GraphicsDevice->CreateTexture("Content/small_hands.jpg");
-
+		_font = std::make_unique<Font>(*GraphicsDevice, "Content/NotoSansJP-Regular.ttf");
+		log = logger::getInstance("black", "green");
 		table.addPlayer();
 		table.addPlayer(randomStrategy);
 		table.addPlayer(assertDominance, assertDominanceInit);
@@ -119,7 +122,7 @@ class PokerGame : public Game
 	void Draw() override
 	{
 		GraphicsDevice->Clear(Color::CornflowerBlue());
-		_renderer->Draw(_sprite.get(), Vector2f::Zero());
+		log->draw(*_renderer,*_font);
 		_renderer->Render();
 	}
 };

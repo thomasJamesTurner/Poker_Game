@@ -45,6 +45,7 @@ protected:
 	{
 		const RoundStartEvent& startEvent = static_cast<const RoundStartEvent&>(event);
 		minBet = startEvent.bigBlindAmount;
+		account = 100.0f;
 
 		playerHand.cards.clear();
 		playerHand.makeHand(deck, 2);
@@ -55,6 +56,25 @@ protected:
 		if (startEvent.bigBlind == this)
 		{
 			makeBet(minBet);
+		}
+	}
+
+	void startTurn(const Event& event)
+	{
+		PlayerStartTurn start = static_cast<const PlayerStartTurn&>(event);
+		log->debugMsg("Player Stating: " + start.playerStarting->getPlayerName() + "\nThis Player: " + playerName);
+		if (start.playerStarting == this)
+		{
+			log->debugMsg(playerName + " is player starting turn");
+			log->msg("Player " + playerName + "\naccount: " + std::to_string(account));
+			if (account <= 0)
+			{
+				PlayerExitEvent exit(this);
+				handler->sendEvent(exit);
+				log->msg("player: " + playerName + "has no money and will exit");
+				PlayerEndTurn end;
+				handler->sendEvent(end);
+			}
 		}
 	}
 public:
@@ -73,6 +93,7 @@ public:
 		handler->subscribe({EventType::PlayerBet,std::bind(&Player::updateMinBet,this,std::placeholders::_1)});
 		handler->subscribe({EventType::PlayerWin, std::bind(&Player::updateAccount, this, std::placeholders::_1)});
 		handler->subscribe({ EventType::RoundStart, std::bind(&Player::startGame, this, std::placeholders::_1) });
+		handler->subscribe({ EventType::PlayerTurnStart, std::bind(&Player::startTurn,this,std::placeholders::_1) });
 	}
 	virtual ~Player()
 	{
@@ -154,22 +175,25 @@ public:
 	{
 		log->msg(playerName + " called");
 		handler->sendEvent(PlayerCallEvent(this));
-		handler->sendEvent(PlayerEndTurn());
 		makeBet(minBet);
+		handler->sendEvent(PlayerEndTurn());
+		
 	}
 	void allIn()
 	{
 		log->msg(playerName + " has gone ALL IN");
 		handler->sendEvent(PlayerAllInEvent(this));
-		handler->sendEvent(PlayerEndTurn());
 		makeBet(account);
+		handler->sendEvent(PlayerEndTurn());
+		
 	}
 	void raise(float raise)
 	{
 		log->msg(playerName + " has raised");
 		handler->sendEvent(PlayerRaiseEvent(this));
-		handler->sendEvent(PlayerEndTurn());
 		makeBet(account);
+		handler->sendEvent(PlayerEndTurn());
+		
 	}
 
 	virtual void playTurn()
@@ -186,12 +210,13 @@ class User : public Player
 		if (startTurn.playerStarting->getPlayerName() == playerName)
 		{
 			showCards();
-			std::string msg = "[  COMMANDS  ]\n\
-								fold:	f\n\
-								call:	l\n\
-								check:	c\n\
-								raise:	r\n\
-								all in:	a";
+			std::string msg = 
+"[  COMMANDS  ]\n\
+fold:	f\n\
+call:	l\n\
+check:	c\n\
+raise:	r\n\
+all in:	a";
 			log->msgColour(log->getAnsiTextColourCode("white"), log->getAnsiBackgroundColourCode("magenta"), msg);
 		}
 	}
